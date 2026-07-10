@@ -1,0 +1,17 @@
+{
+  "name": "Construtrack — Controle de Obras",
+  "short_name": "Construtrack",
+  "description": "Controle de avanço físico de obras — EAP, alertas e sincronização de equipe",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#EFEDE7",
+  "theme_color": "#1B4965",
+  "lang": "pt-BR",
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

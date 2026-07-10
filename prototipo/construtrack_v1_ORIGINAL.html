@@ -1,0 +1,1111 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Construtrack</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600;700;800&display=swap');
+
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600;700;800&display=swap');
+:root{
+  --bege:#EFEDE7;--bege2:#E6E3DB;--bege3:#DCD9D0;
+  --az:#1B4965;--az2:#2C6E91;--az3:#4A8BAD;--az4:#E6F1FB;--az5:#C8DFF0;
+  --tx:#1B4965;--tx2:#4A7A94;--tx3:#8CA8B8;--tx4:#AAC4D0;
+  --br:#C8C4B8;--br2:#DCD9D0;
+  --wh:#FFFFFF;
+  --rd:#C4453C;--rd2:#F6DAD7;
+  --am:#D98E2A;--am2:#FBE9CF;
+  --azl:#185FA5;--azl2:#E6F1FB;
+  --gn:#3F8A5C;--gn2:#DCEEE1;
+  --r:12px;
+  --mono:'IBM Plex Mono',monospace;
+  --sans:'Inter',sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--sans);font-size:14px;color:var(--tx);background:var(--bege);min-height:100vh}
+/* NAV */
+#nav{position:fixed;top:0;left:0;right:0;z-index:100;background:var(--az);
+  display:flex;align-items:center;gap:5px;padding:9px 14px}
+#nav-logo{font-family:var(--mono);font-size:10px;color:rgba(255,255,255,.45);
+  letter-spacing:.12em;margin-right:6px;white-space:nowrap}
+.nb{font-family:var(--mono);font-size:10px;padding:5px 10px;border-radius:999px;
+  border:none;background:transparent;color:rgba(255,255,255,.4);cursor:pointer;transition:all .15s}
+.nb:hover{color:rgba(255,255,255,.7)}
+.nb.on{background:rgba(255,255,255,.15);color:#fff}
+/* TELAS */
+.tela{display:none;padding:52px 0 48px;min-height:100vh}.tela.ativa{display:block}
+.container{max-width:480px;margin:0 auto;padding:0 16px}
+/* HEADER */
+.th{padding:18px 16px 14px;border-bottom:1px solid var(--br2);margin-bottom:14px}
+.ey{font-family:var(--mono);font-size:10px;color:var(--az2);letter-spacing:.12em;
+  text-transform:uppercase;font-weight:600;margin-bottom:4px}
+.th h1{font-size:20px;font-weight:800;color:var(--az);letter-spacing:-.01em}
+.th .sub{font-size:12px;color:var(--tx3);margin-top:2px}
+/* BOTÕES */
+.btn-back{display:inline-flex;align-items:center;gap:6px;padding:8px 12px;color:var(--az2);
+  font-family:var(--mono);font-size:12px;cursor:pointer;background:transparent;border:none;margin:8px 16px 0}
+.btn-back:hover{color:var(--az)}
+.btn-prim{display:flex;align-items:center;justify-content:center;gap:8px;margin:20px 16px;
+  padding:13px;background:var(--az);color:#fff;border:none;border-radius:var(--r);
+  cursor:pointer;font-weight:700;font-size:14px;font-family:var(--sans);transition:background .15s}
+.btn-prim:hover{background:var(--az2)}
+.btn-prim:disabled{background:var(--tx4);cursor:not-allowed}
+/* CHIPS */
+.chips{display:flex;gap:6px;padding:0 16px 10px;overflow-x:auto;-webkit-overflow-scrolling:touch}
+.chips::-webkit-scrollbar{display:none}
+.chip{font-family:var(--mono);font-size:10px;font-weight:600;text-transform:uppercase;
+  letter-spacing:.05em;padding:5px 11px;border-radius:999px;border:1px solid var(--br);
+  color:var(--tx3);white-space:nowrap;cursor:pointer;display:flex;align-items:center;gap:5px;
+  background:var(--wh);transition:all .15s}
+.chip:hover{border-color:var(--az3);color:var(--az)}
+.chip.on{background:var(--az);color:#fff;border-color:var(--az)}
+.chip .dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.chips-ord .chip{background:var(--bege2)}
+.chips-ord .chip.on{background:var(--az);color:#fff;border-color:var(--az)}
+/* CARDS HOME */
+.obras-lista{padding:0 16px;display:flex;flex-direction:column;gap:10px}
+.obra-card{background:var(--wh);border:1px solid var(--br2);border-radius:var(--r);
+  padding:14px;cursor:pointer;transition:box-shadow .15s,border-color .15s}
+.obra-card:hover{box-shadow:0 2px 14px rgba(27,73,101,.1);border-color:var(--az5)}
+.obra-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:9px}
+.obra-nome{font-weight:700;font-size:15px;color:var(--az);margin-bottom:3px}
+.obra-id{font-family:var(--mono);font-size:9px;color:var(--az2);background:var(--az4);
+  padding:1px 6px;border-radius:3px;display:inline-block;margin-bottom:3px}
+.obra-mun{font-size:11px;color:var(--tx3)}
+.obra-pct{font-family:var(--mono);font-size:22px;font-weight:700;color:var(--az);line-height:1}
+.obra-pct small{font-size:10px;color:var(--tx4);font-weight:400}
+.pb{height:5px;background:var(--bege3);border-radius:3px;margin-bottom:9px;overflow:hidden}
+.pf{height:100%;background:var(--az);border-radius:3px;transition:width .3s}
+.pf.done{background:var(--gn)}
+.obra-bot{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px}
+.badges{display:flex;gap:5px;flex-wrap:wrap}
+.badge{font-family:var(--mono);font-size:10px;font-weight:700;padding:3px 7px;
+  border-radius:5px;display:flex;align-items:center;gap:3px}
+.badge .sw{width:6px;height:6px;border-radius:50%}
+.badge.rd{background:var(--rd2);color:var(--rd)}.badge.rd .sw{background:var(--rd)}
+.badge.am{background:var(--am2);color:var(--am)}.badge.am .sw{background:var(--am)}
+.badge.azl{background:var(--azl2);color:var(--azl)}.badge.azl .sw{background:var(--azl)}
+.badge.gn{background:var(--gn2);color:var(--gn)}.badge.gn .sw{background:var(--gn)}
+.obra-status{font-size:10px;color:var(--tx3);font-family:var(--mono)}
+.empty{text-align:center;padding:48px 16px;color:var(--tx3)}
+.empty p{margin-bottom:14px;font-size:14px}
+/* FORM */
+.fc{background:var(--wh);border:1px solid var(--br2);border-radius:var(--r);padding:14px;margin:0 16px 10px}
+.fr{margin-bottom:14px}.fr:last-child{margin-bottom:0}
+.fl{font-weight:600;font-size:11px;color:var(--az);display:block;margin-bottom:6px;
+  text-transform:uppercase;letter-spacing:.06em}
+.fl .hint{font-size:11px;color:var(--tx3);font-weight:400;text-transform:none;letter-spacing:0}
+.fi,.fta,.fsel{width:100%;padding:9px 10px;border:1px solid var(--br);border-radius:8px;
+  font-family:var(--sans);font-size:13px;color:var(--az);background:var(--wh);transition:border-color .15s}
+.fta{resize:vertical;min-height:68px}
+.fi:focus,.fta:focus,.fsel:focus{outline:none;border-color:var(--az)}
+.fi::placeholder,.fta::placeholder{color:var(--tx4)}
+.info-ok{background:var(--gn2);color:var(--gn);padding:10px 12px;border-radius:8px;
+  font-size:12px;font-family:var(--mono);margin:0 16px 12px;border:1px solid var(--gn)}
+.info-warn{background:var(--am2);color:var(--am);padding:10px 12px;border-radius:8px;
+  font-size:12px;font-family:var(--mono);margin:0 16px 12px;border:1px solid var(--am)}
+.info-az{background:var(--azl2);color:var(--azl);padding:10px 12px;border-radius:8px;
+  font-size:12px;font-family:var(--mono);margin:0 16px 12px;border:1px solid var(--azl)}
+.erro{background:var(--rd2);color:var(--rd);padding:10px 12px;border-radius:8px;
+  font-size:12px;margin:0 16px 12px;border:1px solid var(--rd)}
+/* EAP */
+.eap-cont{padding:0 16px}
+.pac-bloco{margin-bottom:12px;background:var(--wh);border:1px solid var(--br2);border-radius:var(--r);overflow:hidden}
+.pac-hdr{display:flex;justify-content:space-between;align-items:center;padding:12px 14px;
+  cursor:pointer;border-bottom:1px solid var(--br2);transition:background .15s}
+.pac-hdr:hover,.pac-hdr.open{background:var(--az4)}
+.pac-hdr.open{border-bottom:2px solid var(--az)}
+.pac-L{flex:1;display:flex;gap:8px;align-items:baseline;min-width:0}
+.pac-cod{font-family:var(--mono);font-weight:700;color:var(--az);font-size:11px;
+  text-transform:uppercase;letter-spacing:.1em;flex-shrink:0}
+.pac-nom{font-weight:700;color:var(--az);font-size:14px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pac-R{display:flex;gap:6px;align-items:center;flex-shrink:0}
+.pac-pct{font-family:var(--mono);font-weight:700;color:var(--az);font-size:13px}
+.chev{color:var(--tx4);font-size:18px;transition:transform .2s;flex-shrink:0}
+.chev.open{transform:rotate(90deg)}
+.pac-body{overflow:hidden}
+.grp-bloco{padding:10px 14px;border-bottom:1px solid var(--br2)}
+.grp-hdr{display:flex;justify-content:space-between;align-items:center;padding:7px 0;cursor:pointer}
+.grp-nom{font-weight:600;color:var(--az);font-size:13px;flex:1}
+.grp-pct{font-family:var(--mono);font-weight:600;color:var(--az2);font-size:12px}
+.grp-body{padding:4px 0 0 10px}
+.it-row{display:flex;justify-content:space-between;align-items:center;padding:8px 14px;
+  border-bottom:1px solid var(--br2);cursor:pointer;transition:background .15s}
+.it-row:hover{background:var(--az4)}
+.it-L{flex:1;display:flex;gap:7px;align-items:center;min-width:0}
+.it-cod{font-family:var(--mono);font-weight:700;color:var(--az2);font-size:10px;
+  text-transform:uppercase;flex-shrink:0}
+.it-nom{font-weight:600;color:var(--az);font-size:12px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.it-pct{font-family:var(--mono);font-weight:600;color:var(--az2);font-size:12px;flex-shrink:0}
+.sub-row{display:flex;justify-content:space-between;align-items:center;padding:7px 22px;
+  border-bottom:1px solid var(--bege3);cursor:pointer;transition:background .15s}
+.sub-row:hover{background:var(--az4)}
+.sub-L{flex:1;display:flex;gap:6px;align-items:baseline;min-width:0}
+.sub-cod{font-family:var(--mono);font-weight:600;color:var(--az3);font-size:9px;flex-shrink:0}
+.sub-nom{color:var(--tx);font-weight:500;font-size:12px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sub-R{display:flex;gap:5px;align-items:center;flex-shrink:0}
+.sub-pct{font-family:var(--mono);font-weight:600;color:var(--az2);font-size:11px}
+.adot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.adot.rd{background:var(--rd)}.adot.am{background:var(--am)}
+.adot.azl{background:var(--azl)}.adot.gn{background:var(--gn)}
+.al-count{font-family:var(--mono);font-size:9px;font-weight:700;
+  padding:1px 5px;border-radius:4px;display:flex;align-items:center;gap:3px}
+.al-count.rd{background:var(--rd2);color:var(--rd)}
+.al-count.am{background:var(--am2);color:var(--am)}
+.al-count.azl{background:var(--azl2);color:var(--azl)}
+.al-count.gn{background:var(--gn2);color:var(--gn)}
+/* EDICAO EAP */
+.edicao-bar{display:flex;gap:6px;padding:4px 16px 12px;align-items:center;flex-wrap:wrap}
+.acao-btn{font-family:var(--mono);font-size:10px;font-weight:600;padding:7px 12px;
+  border-radius:8px;border:1px solid var(--br);background:var(--wh);
+  cursor:pointer;transition:all .15s;color:var(--tx2)}
+.acao-btn:hover{border-color:var(--az);color:var(--az);background:var(--az4)}
+.acao-btn.eap-on{background:var(--rd);color:#fff;border-color:var(--rd)}
+.acao-btn.eap-on:hover{background:#a3372f}
+.acao-btn.perigo{color:var(--rd)}.acao-btn.perigo:hover{background:var(--rd2);border-color:var(--rd)}
+.ec-row{display:flex;align-items:center;gap:8px;padding:6px 22px;
+  border-bottom:1px solid var(--bege3);background:var(--bege2)}
+.ec-row.slot-on{background:var(--am2)}
+.ec-row.oculto{opacity:.55}
+.ec-check{width:15px;height:15px;cursor:pointer;flex-shrink:0;accent-color:var(--az)}
+.ec-nom{flex:1;font-size:12px;color:var(--tx3);font-style:italic}
+.ec-nom.on{color:var(--az);font-style:normal}
+.ec-input{flex:1;border:none;background:transparent;font-family:var(--sans);
+  font-size:12px;color:var(--az);padding:2px 4px}
+.ec-input:focus{outline:1px solid var(--az);border-radius:3px}
+.slot-tag{font-family:var(--mono);font-size:9px;padding:1px 5px;border-radius:3px;
+  background:var(--am);color:#fff;flex-shrink:0}
+.ec-hint{font-size:10px;color:var(--tx4);font-family:var(--mono);flex-shrink:0;margin-left:auto}
+/* MODAL */
+.overlay{display:none;position:fixed;inset:0;background:rgba(19,54,80,.45);z-index:200;
+  align-items:center;justify-content:center;padding:16px}
+.overlay.on{display:flex}
+.modal{background:var(--wh);border-radius:16px;padding:24px;max-width:360px;width:100%;
+  box-shadow:0 8px 40px rgba(27,73,101,.2)}
+.modal h2{font-size:16px;font-weight:700;color:var(--az);margin-bottom:8px}
+.modal p{font-size:13px;color:var(--tx2);margin-bottom:16px;line-height:1.55}
+.modal .fi{margin-bottom:16px}
+.modal-btns{display:flex;gap:10px}
+.modal-btns button{flex:1;padding:11px;border-radius:8px;border:none;cursor:pointer;
+  font-weight:700;font-family:var(--sans);font-size:13px;transition:background .15s}
+.mb-cancel{background:var(--bege2);color:var(--tx2)}.mb-cancel:hover{background:var(--bege3)}
+.mb-del{background:var(--rd);color:#fff}.mb-del:hover{background:#a3372f}
+.mb-ok{background:var(--az);color:#fff}.mb-ok:hover{background:var(--az2)}
+/* REGISTRO */
+.pct-row{display:flex;align-items:center;gap:10px;margin:8px 0 4px}
+.pct-big{font-family:var(--mono);font-size:28px;font-weight:700;color:var(--az);min-width:70px;text-align:center}
+.pct-input{font-family:var(--mono);font-size:15px;font-weight:600;color:var(--az);
+  width:60px;padding:6px 8px;border:1px solid var(--br);border-radius:6px;text-align:center;background:var(--wh)}
+.pct-input:focus{outline:none;border-color:var(--az)}
+input[type=range]{flex:1;cursor:pointer;accent-color:var(--az)}
+.sec-sep{font-family:var(--mono);font-size:10px;color:var(--tx3);text-transform:uppercase;
+  letter-spacing:.1em;padding:16px 16px 8px;font-weight:600;display:block}
+.motivos{margin:8px 0}
+.motivo{display:flex;align-items:flex-start;gap:10px;padding:9px 8px;cursor:pointer;
+  transition:background .15s;border-radius:6px}
+.motivo:hover{background:var(--az4)}
+.m-radio{width:16px;height:16px;border:2px solid var(--tx4);border-radius:50%;
+  flex-shrink:0;margin-top:1px;transition:all .15s}
+.motivo.sel .m-radio{background:var(--rd);border-color:var(--rd)}
+.m-txt{font-size:13px;color:var(--tx)}
+.motivo-outro{display:none;margin-top:8px}.motivo-outro.on{display:block}
+.reg-box{background:var(--rd2);border:1px solid var(--rd);border-radius:var(--r);
+  padding:14px;margin:0 16px 14px;display:none}.reg-box.on{display:block}
+.reg-box-title{font-weight:700;color:var(--rd);margin-bottom:10px;font-size:13px}
+/* ALERTAS MÚLTIPLOS */
+.alertas-wrap{padding:0 16px 14px}
+.alertas-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.alertas-header-txt{font-family:var(--mono);font-size:10px;color:var(--tx3);
+  text-transform:uppercase;letter-spacing:.1em;font-weight:600}
+.btn-add-alerta{font-family:var(--mono);font-size:11px;padding:5px 10px;border-radius:6px;
+  border:1px solid var(--az2);background:transparent;color:var(--az2);cursor:pointer;transition:all .15s}
+.btn-add-alerta:hover{background:var(--az4)}
+.alerta-item{background:var(--wh);border:1px solid var(--br2);border-radius:10px;padding:12px;margin-bottom:8px}
+.alerta-cores{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:10px}
+.al-opt{display:flex;align-items:center;gap:5px;padding:5px 10px;border-radius:6px;
+  border:1px solid var(--br2);cursor:pointer;font-size:12px;font-weight:600;
+  color:var(--tx2);transition:all .15s;background:var(--bege2)}
+.al-opt:hover{border-color:var(--az3)}
+.al-opt.on-rd{background:var(--rd2);border-color:var(--rd);color:var(--rd)}
+.al-opt.on-am{background:var(--am2);border-color:var(--am);color:var(--am)}
+.al-opt.on-azl{background:var(--azl2);border-color:var(--azl);color:var(--azl)}
+.al-opt.on-gn{background:var(--gn2);border-color:var(--gn);color:var(--gn)}
+.al-cor{width:10px;height:10px;border-radius:50%}
+.btn-rm-alerta{margin-left:auto;font-size:18px;color:var(--tx4);cursor:pointer;
+  background:none;border:none;padding:0 4px;line-height:1;display:block}
+.btn-rm-alerta:hover{color:var(--rd)}
+/* EXPORT */
+.exp-section{margin:0 16px 16px}
+.exp-section-title{font-family:var(--mono);font-size:10px;font-weight:600;
+  text-transform:uppercase;letter-spacing:.08em;color:var(--az2);
+  padding:14px 0 8px;border-top:1px solid var(--br2)}
+.exp-section-title:first-child{border-top:none;padding-top:0}
+.exp-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
+.exp-card{background:var(--wh);border:1px solid var(--br2);border-radius:var(--r);padding:14px;text-align:center}
+.exp-icon{font-size:24px;margin-bottom:6px}
+.exp-titulo{font-weight:700;font-size:13px;color:var(--az);margin-bottom:4px}
+.exp-desc{font-size:11px;color:var(--tx3);margin-bottom:10px;line-height:1.4}
+.exp-btn{display:block;width:100%;padding:9px;background:var(--az);color:#fff;
+  border:none;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer;
+  font-family:var(--sans);transition:background .15s}
+.exp-btn:hover{background:var(--az2)}
+.exp-btn:disabled{background:var(--tx4);cursor:not-allowed}
+.exp-btn.sec{background:var(--bege2);color:var(--az);border:1px solid var(--br)}
+.exp-btn.sec:hover{background:var(--az4)}
+.exp-opts{background:var(--wh);border:1px solid var(--br2);border-radius:var(--r);padding:14px;margin-bottom:10px}
+.exp-item{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--br2)}
+.exp-item:last-child{border-bottom:none}
+.exp-chk{width:15px;height:15px;cursor:pointer;accent-color:var(--az)}
+.exp-lbl{font-size:13px;color:var(--az);cursor:pointer;flex:1}
+/* LOCALIZAÇÃO */
+.loc-btn{display:flex;align-items:center;gap:8px;padding:9px 12px;border:1px solid var(--br);
+  border-radius:8px;background:var(--wh);cursor:pointer;font-size:13px;color:var(--az2);
+  font-family:var(--sans);transition:all .15s;width:100%;margin-bottom:8px}
+.loc-btn:hover{border-color:var(--az);background:var(--az4)}
+.loc-copy{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border:1px solid var(--br);
+  border-radius:6px;background:var(--wh);cursor:pointer;font-size:11px;font-family:var(--mono);
+  color:var(--tx3);transition:all .15s}
+.loc-copy:hover{border-color:var(--az);color:var(--az)}
+.loading{text-align:center;padding:48px 16px;color:var(--tx3);font-family:var(--mono);font-size:12px}
+
+
+.pac-inp{font-size:14px;font-weight:700;color:var(--az);flex:1}
+.oculto{opacity:.5}
+.grp-bloco.oculto{opacity:.5}
+
+</style>
+</head>
+<body>
+
+<div id="nav">
+  <span id="nav-logo" style="font-family:var(--mono);font-size:11px;font-weight:700;color:rgba(255,255,255,.9);letter-spacing:.08em;margin-right:8px">CONSTRUTRACK</span>
+  <button class="nb on" onclick="irPara('home')">HOME</button>
+  <button class="nb" onclick="irPara('obra')">EAP</button>
+  <button class="nb" onclick="irPara('export')">EXPORT</button>
+</div>
+
+<div class="overlay" id="modal-del">
+  <div class="modal"><h2>Deletar obra?</h2><p id="modal-del-p"></p>
+    <div class="modal-btns"><button class="mb-cancel" onclick="fecharModais()">Cancelar</button><button class="mb-del" id="modal-del-ok">Deletar</button></div>
+  </div>
+</div>
+<div class="overlay" id="modal-exp-json">
+  <div class="modal"><h2>Exportar obra</h2><p>Arquivo para sincronizar com outro celular via WhatsApp ou Drive.</p>
+    <label class="fl">Seu nome</label><input id="exp-json-nome" class="fi" placeholder="Ex: João Silva">
+    <div class="modal-btns"><button class="mb-cancel" onclick="fecharModais()">Cancelar</button><button class="mb-ok" onclick="confirmarExpJSON()">Exportar</button></div>
+  </div>
+</div>
+<div class="overlay" id="modal-imp-json">
+  <div class="modal"><h2>Importar obra</h2><p>Selecione o arquivo .json recebido de outro celular. Os dados serão mesclados automaticamente.</p>
+    <input type="file" id="imp-json-file" accept=".json" class="fi" style="margin-bottom:16px">
+    <div class="modal-btns"><button class="mb-cancel" onclick="fecharModais()">Cancelar</button><button class="mb-ok" onclick="confirmarImpJSON()">Importar</button></div>
+  </div>
+</div>
+<div class="overlay" id="modal-csv-nome">
+  <div class="modal"><h2>Exportar CSV</h2><p>Seu nome será registrado como responsável pela exportação.</p>
+    <label class="fl">Seu nome</label><input id="csv-nome" class="fi" placeholder="Ex: João Silva">
+    <div class="modal-btns"><button class="mb-cancel" onclick="fecharModais()">Cancelar</button><button class="mb-ok" id="modal-csv-ok">Exportar</button></div>
+  </div>
+</div>
+
+<div id="tela-home" class="tela ativa">
+  <div class="th"><div class="ey">CONTROLE DE OBRAS</div><h1>Acompanhamento Físico</h1><div class="sub">Gestão de avanço por percepção calibrada</div></div>
+  <div class="chips" id="chips-st">
+    <div class="chip on" onclick="filtrarSt(this,'')"><div class="dot" style="background:var(--tx4)"></div>Todas</div>
+    <div class="chip" onclick="filtrarSt(this,'Em andamento')"><div class="dot" style="background:var(--az2)"></div>Em andamento</div>
+    <div class="chip" onclick="filtrarSt(this,'Paralisada')"><div class="dot" style="background:var(--am)"></div>Paralisada</div>
+    <div class="chip" onclick="filtrarSt(this,'Concluída')"><div class="dot" style="background:var(--gn)"></div>Concluída</div>
+  </div>
+  <div class="chips chips-ord" id="chips-ord">
+    <div class="chip on" onclick="ordenar(this,'nome')">A–Z</div>
+    <div class="chip" onclick="ordenar(this,'pct')">% ↓</div>
+    <div class="chip" onclick="ordenar(this,'data')">Recente</div>
+    <div class="chip" onclick="ordenar(this,'alerta')">Alertas</div>
+  </div>
+  <div id="lista-obras" class="obras-lista"><div class="loading">Carregando...</div></div>
+  <button class="btn-prim" onclick="irPara('cadastro')">+ Nova obra</button>
+</div>
+
+<div id="tela-obra" class="tela">
+  <button class="btn-back" onclick="irPara('home')">← Obras</button>
+  <div class="th"><div class="ey" id="obra-ey">OBRA</div><h1 id="obra-h1">—</h1><div class="sub" id="obra-sub">—</div></div>
+  <div class="edicao-bar">
+    <button class="acao-btn" id="btn-eap" onclick="toggleEdicao()">🔒 Configurar EAP</button>
+    <button class="acao-btn" onclick="abrirEditar()">✏️ Editar obra</button>
+    <button class="acao-btn perigo" onclick="pedirDeletar()">🗑 Deletar</button>
+  </div>
+  <div id="eap-cont" class="eap-cont"><div class="loading">Carregando EAP...</div></div>
+</div>
+
+<div id="tela-registro" class="tela">
+  <button class="btn-back" onclick="irPara('obra')">← Obra</button>
+  <div class="th"><div class="ey" id="reg-ey">REGISTRO</div><h1 id="reg-h1">Registrar Avanço</h1><div class="sub" id="reg-sub">—</div></div>
+  <div id="reg-erro" class="erro" style="display:none"></div>
+  <div class="fc">
+    <div class="fr">
+      <label class="fl">Avanço <span class="hint" id="ref-pct">última visita: 0%</span></label>
+      <div class="pct-row"><span class="pct-big" id="pct-val">0%</span>
+        <input type="range" id="slider" min="0" max="100" value="0" step="1" oninput="onSlider(this.value)">
+        <input type="number" id="pct-num" class="pct-input" min="0" max="100" value="0" oninput="onNumInput(this.value)">
+      </div>
+    </div>
+    <div class="fr"><label class="fl">Data da visita</label><input id="reg-data" class="fi" type="date"></div>
+    <div class="fr"><label class="fl">Observação <span class="hint">(opcional)</span></label><textarea id="reg-obs" class="fta" placeholder="Observação sobre o avanço"></textarea></div>
+  </div>
+  <div class="reg-box" id="reg-box">
+    <div class="reg-box-title">⚠ Regressão — justificativa obrigatória</div>
+    <div class="motivos">
+      <div class="motivo" onclick="selMot(this,'1')"><div class="m-radio"></div><span class="m-txt">Erro de registro anterior</span></div>
+      <div class="motivo" onclick="selMot(this,'2')"><div class="m-radio"></div><span class="m-txt">Demolição por não conformidade</span></div>
+      <div class="motivo" onclick="selMot(this,'3')"><div class="m-radio"></div><span class="m-txt">Retrabalho necessário</span></div>
+      <div class="motivo" onclick="selMot(this,'4')"><div class="m-radio"></div><span class="m-txt">Dano ou intempérie</span></div>
+      <div class="motivo" onclick="selMot(this,'5')"><div class="m-radio"></div><span class="m-txt">Outro (campo livre)</span></div>
+      <div class="motivo-outro" id="mot-outro"><input id="mot-txt" class="fi" placeholder="Descreva o motivo"></div>
+    </div>
+  </div>
+  <span class="sec-sep">Alertas desta subetapa</span>
+  <div class="alertas-wrap">
+    <div class="alertas-header"><span class="alertas-header-txt">Alertas ativos</span><button class="btn-add-alerta" onclick="addAlerta()">+ Adicionar</button></div>
+    <div id="alertas-lista"></div>
+  </div>
+  <button class="btn-prim" onclick="salvarReg()">Salvar registro</button>
+</div>
+
+<div id="tela-cadastro" class="tela">
+  <button class="btn-back" onclick="irPara('home')">← Obras</button>
+  <div class="th"><div class="ey">NOVA OBRA</div><h1>Cadastrar obra</h1><div class="sub">EAP padrão carregada automaticamente</div></div>
+  <div class="info-ok">ID gerado automaticamente · formato NOME-ANO</div>
+  <div class="fc">
+    <div class="fr"><label class="fl">Nome da obra <span class="hint">*</span></label><input id="c-nome" class="fi" placeholder="Ex: ESF Vilatur"></div>
+    <div class="fr"><label class="fl">Endereço <span class="hint">*</span></label><input id="c-end" class="fi" placeholder="Rua, número"></div>
+    <div class="fr"><label class="fl">Município / UF</label><input id="c-mun" class="fi" placeholder="Saquarema / RJ"></div>
+  </div>
+  <div class="fc">
+    <div class="fr">
+      <label class="fl">Localização</label>
+      <button class="loc-btn" onclick="captarGPS('c')">📍 Captar localização atual (GPS)</button>
+      <div id="c-loc-info" style="display:none;margin-top:4px">
+        <div style="display:flex;gap:6px;align-items:center">
+          <span id="c-loc-txt" style="font-size:11px;color:var(--tx3);font-family:var(--mono);flex:1"></span>
+          <button class="loc-copy" onclick="copiarLoc('c')" id="c-copy-btn">📋 Copiar link</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="fc">
+    <div class="fr"><label class="fl">Data de início</label><input id="c-ini" class="fi" type="date"></div>
+    <div class="fr"><label class="fl">Data prevista de término</label><input id="c-ter" class="fi" type="date"></div>
+  </div>
+  <div class="fc">
+    <div class="fr"><label class="fl">Status</label>
+      <select id="c-sta" class="fsel"><option>Em andamento</option><option>Paralisada</option><option>Concluída</option></select>
+    </div>
+  </div>
+  <button class="btn-prim" onclick="criarObra()">Criar obra →</button>
+</div>
+
+<div id="tela-editar-obra" class="tela">
+  <button class="btn-back" onclick="irPara('obra')">← Obra</button>
+  <div class="th"><div class="ey">EDITAR OBRA</div><h1>Editar dados</h1><div class="sub">ID não pode ser alterado</div></div>
+  <div class="info-warn">ID: <span id="e-id">—</span> · não editável</div>
+  <div class="fc">
+    <div class="fr"><label class="fl">Nome da obra</label><input id="e-nome" class="fi"></div>
+    <div class="fr"><label class="fl">Endereço</label><input id="e-end" class="fi"></div>
+    <div class="fr"><label class="fl">Município / UF</label><input id="e-mun" class="fi"></div>
+  </div>
+  <div class="fc">
+    <div class="fr">
+      <label class="fl">Localização</label>
+      <button class="loc-btn" onclick="captarGPS('e')">📍 Atualizar localização (GPS)</button>
+      <div id="e-loc-info" style="display:none;margin-top:4px">
+        <div style="display:flex;gap:6px;align-items:center">
+          <span id="e-loc-txt" style="font-size:11px;color:var(--tx3);font-family:var(--mono);flex:1"></span>
+          <button class="loc-copy" onclick="copiarLoc('e')" id="e-copy-btn">📋 Copiar link</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="fc">
+    <div class="fr"><label class="fl">Data de início</label><input id="e-ini" class="fi" type="date"></div>
+    <div class="fr"><label class="fl">Data prevista de término</label><input id="e-ter" class="fi" type="date"></div>
+  </div>
+  <div class="fc">
+    <div class="fr"><label class="fl">Status</label>
+      <select id="e-sta" class="fsel"><option>Em andamento</option><option>Paralisada</option><option>Concluída</option></select>
+    </div>
+  </div>
+  <button class="btn-prim" onclick="salvarEditar()">Salvar alterações</button>
+</div>
+
+<div id="tela-export" class="tela">
+  <button class="btn-back" onclick="irPara('home')">← Obras</button>
+  <div class="th"><div class="ey">EXPORTAÇÃO</div><h1>Exportar Dados</h1><div class="sub">CSV para análise · JSON para sincronização</div></div>
+  <div class="exp-section">
+    <div class="exp-section-title">Selecionar obras</div>
+    <div class="exp-opts" id="exp-lista-wrap"><div class="loading">Carregando...</div></div>
+    <div class="exp-section-title">CSV — análise e relatórios</div>
+    <div class="exp-grid">
+      <div class="exp-card"><div class="exp-icon">📊</div><div class="exp-titulo">Cronograma</div><div class="exp-desc">Estado atual de cada subetapa</div><button class="exp-btn" id="btn-cron" onclick="pedirNomeCSV('cron')">Download CSV</button></div>
+      <div class="exp-card"><div class="exp-icon">📋</div><div class="exp-titulo">Histórico</div><div class="exp-desc">Log completo com regressões</div><button class="exp-btn" id="btn-hist" onclick="pedirNomeCSV('hist')">Download CSV</button></div>
+    </div>
+    <div class="exp-section-title">JSON — sincronização entre celulares</div>
+    <div class="info-az" style="margin:0 0 10px;font-size:11px">Exporte de um celular, envie por WhatsApp ou Drive, importe no outro. O merge é automático.</div>
+    <div class="exp-grid">
+      <div class="exp-card"><div class="exp-icon">📤</div><div class="exp-titulo">Exportar obra</div><div class="exp-desc">Gera arquivo .json completo</div><button class="exp-btn sec" id="btn-exp-json" onclick="abrirModalExpJSON()">Exportar JSON</button></div>
+      <div class="exp-card"><div class="exp-icon">📥</div><div class="exp-titulo">Importar obra</div><div class="exp-desc">Mescla dados de outro celular</div><button class="exp-btn sec" id="btn-imp-json" onclick="abrirModalImpJSON()">Importar JSON</button></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const TPL={"pacotes":[{"codigo":"0","nome":"Projetos e Documentação Técnica","itens":[{"codigo":"0.1","nome":"Levantamento","subetapas":[{"id":"0.1.1","nome":"Levantamento arquitetônico da edificação existente"},{"id":"0.1.2","nome":"Verificação do padrão de energia existente e demanda necessária"},{"id":"0.1.3","nome":"Solicitação de aumento de carga junto à concessionária"},{"id":"0.1.4","nome":"Registro de patologias"},{"id":"0.1.5","nome":"Prospecção/verificação estrutural prévia"},{"id":"0.1.s1","nome":"[Subetapa livre 1]","slot":true,"visivel":false},{"id":"0.1.s2","nome":"[Subetapa livre 2]","slot":true,"visivel":false},{"id":"0.1.s3","nome":"[Subetapa livre 3]","slot":true,"visivel":false}]},{"codigo":"0.2","nome":"Projeto Preliminar Arquitetônico","subetapas":[{"id":"0.2.1","nome":"Desenvolvimento do preliminar arquitetônico"},{"id":"0.2.2","nome":"Compatibilização BIM parcial"},{"id":"0.2.3","nome":"Aprovação junto ao cliente / prefeitura"},{"id":"0.2.s1","nome":"[Subetapa livre 1]","slot":true,"visivel":false},{"id":"0.2.s2","nome":"[Subetapa livre 2]","slot":true,"visivel":false},{"id":"0.2.s3","nome":"[Subetapa livre 3]","slot":true,"visivel":false}]},{"codigo":"0.3","nome":"Projetos Executivos","subetapas":[{"id":"0.3.1","nome":"Arquitetônico executivo"},{"id":"0.3.2","nome":"Estrutural executivo"},{"id":"0.3.3","nome":"Hidrossanitário executivo"},{"id":"0.3.4","nome":"Elétrico executivo"},{"id":"0.3.5","nome":"Emissão final compatibilizada para obra"},{"id":"0.3.s1","nome":"[Subetapa livre 1]","slot":true,"visivel":false},{"id":"0.3.s2","nome":"[Subetapa livre 2]","slot":true,"visivel":false},{"id":"0.3.s3","nome":"[Subetapa livre 3]","slot":true,"visivel":false}]},{"codigo":"0.sl1","nome":"[Item livre 1]","slot":true,"visivel":false,"subetapas":[{"id":"0.sl1.s1","nome":"[Subetapa livre 1]","slot":true,"visivel":false},{"id":"0.sl1.s2","nome":"[Subetapa livre 2]","slot":true,"visivel":false},{"id":"0.sl1.s3","nome":"[Subetapa livre 3]","slot":true,"visivel":false}]},{"codigo":"0.sl2","nome":"[Item livre 2]","slot":true,"visivel":false,"subetapas":[{"id":"0.sl2.s1","nome":"[Subetapa livre 1]","slot":true,"visivel":false},{"id":"0.sl2.s2","nome":"[Subetapa livre 2]","slot":true,"visivel":false},{"id":"0.sl2.s3","nome":"[Subetapa livre 3]","slot":true,"visivel":false}]}],"grupos_slot":[{"codigo":"0.sp1","nome":"[Subpacote livre 1]","slot":true,"visivel":false,"itens":[{"codigo":"0.sp1.sl1","nome":"[Item livre 1]","slot":true,"visivel":false,"subetapas":[{"id":"0.sp1.sl1.s1","nome":"[Subetapa livre 1]","slot":true,"visivel":false},{"id":"0.sp1.sl1.s2","nome":"[Subetapa livre 2]","slot":true,"visivel":false},{"id":"0.sp1.sl1.s3","nome":"[Subetapa livre 3]","slot":true,"visivel":false}]},{"codigo":"0.sp1.sl2","nome":"[Item livre 2]","slot":true,"visivel":false,"subetapas":[{"id":"0.sp1.sl2.s1","nome":"[Subetapa livre 1]","slot":true,"visivel":false},{"id":"0.sp1.sl2.s2","nome":"[Subetapa livre 2]","slot":true,"visivel":false},{"id":"0.sp1.sl2.s3","nome":"[Subetapa livre 3]","slot":true,"visivel":false}]},{"codigo":"0.sp1.sl3","nome":"[Item livre 3]","slot":true,"visivel":false,"subetapas":[{"id":"0.sp1.sl3.s1","nome":"[Subetapa livre 1]","slot":true,"visivel":false},{"id":"0.sp1.sl3.s2","nome":"[Subetapa livre 2]","slot":true,"visivel":false},{"id":"0.sp1.sl3.s3","nome":"[Subetapa livre 3]","slot":true,"visivel":false}]}]},{"codigo":"0.sp2","nome":"[Subpacote livre 2]","slot":true,"visivel":false,"itens":[{"codigo":"0.sp2.sl1","nome":"[Item livre 1]","slot":true,"visivel":false,"subetapas":[{"id":"0.sp2.sl1.s1","nome":"[Subetapa livre 1]","slot":true,"visivel":false},{"id":"0.sp2.sl1.s2","nome":"[Subetapa livre 2]","slot":true,"visivel":false},{"id":"0.sp2.sl1.s3","nome":"[Subetapa livre 3]","slot":true,"visivel":false}]},{"codigo":"0.sp2.sl2","nome":"[Item livre 2]","slot":true,"visivel":false,"subetapas":[{"id":"0.sp2.sl2.s1","nome":"[Subetapa livre 1]","slot":true,"visivel":false},{"id":"0.sp2.sl2.s2","nome":"[Subetapa livre 2]","slot":true,"visivel":false},{"id":"0.sp2.sl2.s3","nome":"[Subetapa livre 3]","slot":true,"visivel":false}]},{"codigo":"0.sp2.sl3","nome":"[Item livre 3]","slot":true,"visivel":false,"subetapas":[{"id":"0.sp2.sl3.s1","nome":"[Subetapa livre 1]","slot":true,"visivel":false},{"id":"0.sp2.sl3.s2","nome":"[Subetapa livre 2]","slot":true,"visivel":false},{"id":"0.sp2.sl3.s3","nome":"[Subetapa livre 3]","slot":true,"visivel":false}]}]}]},{"codigo":"1","nome":"Serviços Preliminares","itens":[{"codigo":"1.1","nome":"Isolamento e Proteção da Área","subetapas":[{"id":"1.1.1","nome":"Instalação de tapume externo em telha de zinco"},{"id":"1.1.2","nome":"Instalação de divisória interna em drywall para isolamento"},{"id":"1.1.s1","nome":"[Subetapa livre 1]","slot":true,"visivel":false},{"id":"1.1.s2","nome":"[Subetapa livre 2]","slot":true,"visivel":false},{"id":"1.1.s3","nome":"[Subetapa livre 3]","slot":true,"visivel":false}]},{"codigo":"1.2","nome":"Locação da Obra","subetapas":[{"id":"1.2.1","nome":"Locação da obra — rebatimento manual das medidas no existente"},{"id":"1.2.s1","nome":"[Subetapa livre 1]","slot":true,"visivel":false},{"id":"1.2.s2","nome":"[Subetapa livre 2]","slot":true,"visivel":false},{"id":"1.2.s3","nome":"[Subetapa livre 3]","slot":true,"visivel":false}]},{"codigo":"1.3","nome":"Instalações Provisórias","subetapas":[{"id":"1.3.1","nome":"Ligação provisória de energia"},{"id":"1.3.2","nome":"Ligação provisória de água"},{"id":"1.3.3","nome":"Instalação de banheiro químico"},{"id":"1.3.s1","nome":"[Subetapa livre 1]","slot":true,"visivel":false},{"id":"1.3.s2","nome":"[Subetapa livre 2]","slot":true,"visivel":false},{"id":"1.3.s3","nome":"[Subetapa livre 3]","slot":true,"visivel":false}]},{"codigo":"1.sl1","nome":"[Item livre 1]","slot":true,"visivel":false,"subetapas":[{"id":"1.sl1.s1","nome":"[Subetapa livre 1]","slot":true,"visivel":false},{"id":"1.sl1.s2","nome":"[Subetapa livre 2]","slot":true,"visivel":false},{"id":"1.sl1.s3","nome":"[Subetapa livre 3]","slot":true,"visivel":false}]},{"codigo":"1.sl2","nome":"[Item livre 2]","slot":true,"visivel":false,"subetapas":[{"id":"1.sl2.s1","nome":"[Subetapa livre 1]","slot":true,"visivel":false},{"id":"1.sl2.s2","nome":"[Subetapa livre 2]","slot":true,"visivel":false},{"id":"1.sl2.s3","nome":"[Subetapa livre 3]","slot":true,"visivel":false}]}],"grupos_slot":[{"codigo":"1.sp1","nome":"[Subpacote livre 1]","slot":true,"visivel":false,"itens":[{"codigo":"1.sp1.sl1","nome":"[Item livre 1]","slot":true,"visivel":false,"subetapas":[{"id":"1.sp1.sl1.s1","nome":"[Subetapa livre 1]","slot":true,"visivel":false},{"id":"1.sp1.sl1.s2","nome":"[Subetapa livre 2]","slot":true,"visivel":false},{"id":"1.sp1.sl1.s3","nome":"[Subetapa livre 3]","slot":true,"visivel":false}]},{"codigo":"1.sp1.sl2","nome":"[Item livre 2]","slot":true,"visivel":false,"subetapas":[{"id":"1.sp1.sl2.s1","nome":"[Subetapa livre 1]","slot":true,"visivel":false},{"id":"1.sp1.sl2.s2","nome":"[Subetapa livre 2]","slot":true,"visivel":false},{"id":"1.sp1.sl2.s3","nome":"[Subetapa livre 3]","slot":true,"visivel":false}]},{"codigo":"1.sp1.sl3","nome":"[Item livre 3]","slot":true,"visivel":false,"subetapas":[{"id":"1.sp1.sl3.s1","nome":"[Subetapa livre 1]","slot":true,"visivel":false},{"id":"1.sp1.sl3.s2","nome":"[Subetapa livre 2]","slot":true,"visivel":false},{"id":"1.sp1.sl3.s3","nome":"[Subetapa livre 3]","slot":true,"visivel":false}]}]},{"codigo":"1.sp2","nome":"[Subpacote livre 2]","slot":true,"visivel":false,"itens":[{"codigo":"1.sp2.sl1","nome":"[Item livre 1]","slot":true,"visivel":false,"subetapas":[{"id":"1.sp2.sl1.s1","nome":"[Subetapa livre 1]","slot":true,"visivel":false},{"id":"1.sp2.sl1.s2","nome":"[Subetapa livre 2]","slot":true,"visivel":false},{"id":"1.sp2.sl1.s3","nome":"[Subetapa livre 3]","slot":true,"visivel":false}]},{"codigo":"1.sp2.sl2","nome":"[Item livre 2]","slot":true,"visivel":false,"subetapas":[{"id":"1.sp2.sl2.s1","nome":"[Subetapa livre 1]","slot":true,"visivel":false},{"id":"1.sp2.sl2.s2","nome":"[Subetapa livre 2]","slot":true,"visivel":false},{"id":"1.sp2.sl2.s3","nome":"[Subetapa livre 3]","slot":true,"visivel":false}]},{"codigo":"1.sp2.sl3","nome":"[Item livre 3]","slot":true,"visivel":false,"subetapas":[{"id":"1.sp2.sl3.s1","nome":"[Subetapa livre 1]","slot":true,"visivel":false},{"id":"1.sp2.sl3.s2","nome":"[Subetapa livre 2]","slot":true,"visivel":false},{"id":"1.sp2.sl3.s3","nome":"[Subetapa livre 3]","slot":true,"visivel":false}]}]}]},{"codigo":"2","nome":"Construção / Ampliação","grupos":[{"codigo":"2.1","nome":"Fundações","itens":[{"codigo":"2.1.1","nome":"Escavação","subetapas":[{"id":"2.1.1.1","nome":"Escavação para sapatas"},{"id":"2.1.1.2","nome":"Escavação para vigas baldrame"},{"id":"2.1.1.s1","nome":"[Subetapa livre 1]","slot":true,"visivel":false},{"id":"2.1.1.s2","nome":"[Subetapa livre 2]","slot":true,"visivel":false},{"id":"2.1.1.s3","nome":"[Subetapa livre 3]","slot":true,"visivel":false}]},{"codigo":"2.1.2","nome":"Sapatas","subetapas":[{"id":"2.1.2.1","nome":"Execução de concreto magro (lastro)"},{"id":"2.1.2.2","nome":"Armação"},{"id":"2.1.2.3","nome":"Execução de formas"},{"id":"2.1.2.4","nome":"Concretagem"},{"id":"2.1.2.5","nome":"Desforma"},{"id":"2.1.2.6","nome":"Impermeabilização"},{"id":"2.1.2.s1","nome":"[Subetapa livre 1]","slot":true,"visivel":false},{"id":"2.1.2.s2","nome":"[Subetapa livre 2]","slot":true,"visivel":false},{"id":"2.1.2.s3","nome":"[Subetapa livre 3]","slot":true,"visivel":false}]},{"codigo":"2.1.3","nome":"Pilotis","subetapas":[{"id":"2.1.3.1","nome":"Armação"},{"id":"2.1.3.2","nome":"Execução de formas"},{"id":"2.1.3.3","nome":"Concretagem"},{"id":"2.1.3.4","nome":"Desforma"},{"id":"2.1.3.5","nome":"Impermeabilização da base"},{"id":"2.1.3.s1","nome":"[Subetapa livre 1]","slot":true,"visivel":false},{"id":"2.1.3.s2","nome":"[Subetapa livre 2]","slot":true,"visivel":false},{"id":"2.1.3.s3","nome":"[Subetapa livre 3]","slot":true,"visivel":false}]},{"codigo":"2.1.4","nome":"Vigas Baldrame","subetapas":[{"id":"2.1.4.1","nome":"Execução de concreto magro (lastro)"},{"id":"2.1.4.2","nome":"Armação"},{"id":"2.1.4.3","nome":"Execução de formas"},{"id":"2.1.4.4","nome":"Concretagem"},{"id":"2.1.4.5","nome":"Desforma"},{"id":"2.1.4.6","nome":"Impermeabilização"},{"id":"2.1.4.s1","nome":"[Subetapa livre 1]","slot":true,"visivel":false},{"id":"2.1.4.s2","nome":"[Subetapa livre 2]","slot":true,"visivel":false},{"id":"2.1.4.s3","nome":"[Subetapa livre 3]","slot":true,"visivel":false}]},{"codigo":"2.1.5","nome":"Aterro e Compactação","subetapas":[{"id":"2.1.5.1","nome":"Aterro interno"},{"id":"2.1.5.2","nome":"Compactação"},{"id":"2.1.5.s1","nome":"[Subetapa livre 1]","slot":true,"visivel":false},{"id":"2.1.5.s2","nome":"[Subetapa livre 2]","slot":true,"visivel":false},{"id":"2.1.5.s3","nome":"[Subetapa livre 3]","slot":true,"visivel":false}]},{"codigo":"2.1.sl1","nome":"[Item livre 1]","slot":true,"visivel":false,"subetapas":[{"id":"2.1.sl1.s1","nome":"[Subetapa livre 1]","slot":true,"visivel":false},{"id":"2.1.sl1.s2","nome":"[Subetapa livre 2]","slot":true,"visivel":false},{"id":"2.1.sl1.s3","nome":"[Subetapa livre 3]","slot":true,"visivel":false}]},{"codigo":"2.1.sl2","nome":"[Item livre 2]","slot":true,"visivel":false,"subetapas":[{"id":"2.1.sl2.s1","nome":"[Subetapa livre 1]","slot":true,"visivel":false},{"id":"2.1.sl2.s2","nome":"[Subetapa livre 2]","slot":true,"visivel":false},{"id":"2.1.sl2.s3","nome":"[Subetapa livre 3]","slot":true,"visivel":false}]}]},{"codigo":"2.2","nome":"Estrutura","itens":[{"codigo":"2.2.1","nome":"Laje Térrea","subetapas":[{"id":"2.2.1.1","nome":"Execução de formas"},{"id":"2.2.1.2","nome":"Lona plástica"},{"id":"2.2.1.3","nome":"Armação com malha"},{"id":"2.2.1.4","nome":"Concretagem"},{"id":"2.2.1.5","nome":"Desforma"},{"id":"2.2.1.s1","nome":"[Subetapa livre 1]","slot":true,"visivel":false},{"id":"2.2.1.s2","nome":"[Subetapa livre 2]","slot":true,"visivel":false},{"id":"2.2.1.s3","nome":"[Subetapa livre 3]","slot":true,"visivel":false}]},{"codigo":"2.2.2","nome":"Pilares","subetapas":[{"id":"2.2.2.1","nome":"Armação"},{"id":"2.2.2.2","nome":"Execução de formas"},{"id":"2.2.2.3","nome":"Concretagem"},{"id":"2.2.2.4","nome":"Desforma"},{"id":"2.2.2.s1","nome":"[Subetapa livre 1]","slot":true,"visivel":false},{"id":"2.2.2.s2","nome":"[Subetapa livre 2]","slot":true,"visivel":false},{"id":"2.2.2.s3","nome":"[Subetapa livre 3]","slot":true,"visivel":false}]},{"codigo":"2.2.3","nome":"Vigas","subetapas":[{"id":"2.2.3.1","nome":"Armação"},{"id":"2.2.3.2","nome":"Execução de formas"},{"id":"2.2.3.3","nome":"Concretagem"},{"id":"2.2.3.4","nome":"Desforma"},{"id":"2.2.3.s1","nome":"[Subetapa livre 1]","slot":true,"visivel":false},{"id":"2.2.3.s2","nome":"[Subetapa livre 2]","slot":true,"visivel":false},{"id":"2.2.3.s3","nome":"[Subetapa livre 3]","slot":true,"visivel":false}]},{"codigo":"2.2.4","nome":"Vergas e Contravergas","subetapas":[{"id":"2.2.4.1","nome":"Armação"},{"id":"2.2.4.2","nome":"Execução de formas"},{"id":"2.2.4.3","nome":"Concretagem"},{"id":"2.2.4.4","nome":"Desforma"},{"id":"2.2.4.s1","nome":"[Subetapa livre 1]","slot":true,"visivel":false},{"id":"2.2.4.s2","nome":"[Subetapa livre 2]","slot":true,"visivel":false},{"id":"2.2.4.s3","nome":"[Subetapa livre 3]","slot":true,"visivel":false}]},{"codigo":"2.2.5","nome":"Estruturas de Amarração do Telhado","subetapas":[{"id":"2.2.5.1","nome":"Armação"},{"id":"2.2.5.2","nome":"Execução de formas"},{"id":"2.2.5.3","nome":"Concretagem"},{"id":"2.2.5.4","nome":"Desforma"},{"id":"2.2.5.s1","nome":"[Subetapa livre 1]","slot":true,"visivel":false},{"id":"2.2.5.s2","nome":"[Subetapa livre 2]","slot":true,"visivel":false},{"id":"2.2.5.s3","nome":"[Subetapa livre 3]","slot":true,"visivel":false}]},{"codigo":"2.2.6","nome":"Laje de Cobertura","subetapas":[{"id":"2.2.6.1","nome":"Colocação das treliças"},{"id":"2.2.6.2","nome":"Fechamento com isopor/tijolos"},{"id":"2.2.6.3","nome":"Escoramento"},{"id":"2.2.6.4","nome":"Armação de malhas e negativos"},{"id":"2.2.6.5","nome":"Montagem de formas"},{"id":"2.2.6.6","nome":"Concretagem"},{"id":"2.2.6.7","nome":"Desforma"},{"id":"2.2.6.s1","nome":"[Subetapa livre 1]","slot":true,"visivel":false},{"id":"2.2.6.s2","nome":"[Subetapa livre 2]","slot":true,"visivel":false},{"id":"2.2.6.s3","nome":"[Subetapa livre 3]","slot":true,"visivel":false}]},{"codigo":"2.2.sl1","nome":"[Item livre 1]","slot":true,"visivel":false,"subetapas":[{"id":"2.2.sl1.s1","nome":"[Subetapa livre 1]","slot":true,"visivel":false},{"id":"2.2.sl1.s2","nome":"[Subetapa livre 2]","slot":true,"visivel":false},{"id":"2.2.sl1.s3","nome":"[Subetapa livre 3]","slot":true,"visivel":false}]},{"codigo":"2.2.sl2","nome":"[Item livre 2]","slot":true,"visivel":false,"subetapas":[{"id":"2.2.sl2.s1","nome":"[Subetapa livre 1]","slot":true,"visivel":false},{"id":"2.2.sl2.s2","nome":"[Subetapa livre 2]","slot":true,"visivel":false},{"id":"2.2.sl2.s3","nome":"[Subetapa livre 3]","slot":true,"visivel":false}]}]},{"codigo":"2.3","nome":"Vedações","itens":[{"codigo":"2.3.1","nome":"Alvenaria Cerâmica (Externa)","subetapas":[{"id":"2.3.1.1","nome":"Elevação da alvenaria em bloco cerâmico"},{"id":"2.3.1.2","nome":"Chapisco"},{"id":"2.3.1.3","nome":"Emboço"},{"id":"2.3.1.s1","nome":"[Subetapa livre 1]","slot":true,"visivel":false},{"id":"2.3.1.s2","nome":"[Subetapa livre 2]","slot":true,"visivel":false},{"id":"2.3.1.s3","nome":"[Subetapa livre 3]","slot":true,"visivel":false}]},{"codigo":"2.3.2","nome":"Drywall (Interno)","subetapas":[{"id":"2.3.2.1","nome":"Montagem da estrutura metálica"},{"id":"2.3.2.2","nome":"Passagem de infraestrutura elétrica"},{"id":"2.3.2.3","nome":"Passagem de infraestrutura hidráulica"},{"id":"2.3.2.4","nome":"Passagem de infraestrutura de esgoto"},{"id":"2.3.2.5","nome":"Passagem de infraestrutura de ar condicionado"},{"id":"2.3.2.6","nome":"Passagem de infraestrutura de internet/lógica"},{"id":"2.3.2.7","nome":"Fechamento das placas standard"},{"id":"2.3.2.8","nome":"Fechamento das placas RU"},{"id":"2.3.2.9","nome":"Tratamento de juntas e acabamentos"},{"id":"2.3.2.s1","nome":"[Subetapa livre 1]","slot":true,"visivel":false},{"id":"2.3.2.s2","nome":"[Subetapa livre 2]","slot":true,"visivel":false},{"id":"2.3.2.s3","nome":"[Subetapa livre 3]","slot":true,"visivel":false}]},{"codigo":"2.3.sl1","nome":"[Item livre 1]","slot":true,"visivel":false,"subetapas":[{"id":"2.3.sl1.s1","nome":"[Subetapa livre 1]","slot":true,"visivel":false},{"id":"2.3.sl1.s2","nome":"[Subetapa livre 2]","slot":true,"visivel":false},{"id":"2.3.sl1.s3","nome":"[Subetapa livre 3]","slot":true,"visivel":false}]},{"codigo":"2.3.sl2","nome":"[Item livre 2]","slot":true,"visivel":false,"subetapas":[{"id":"2.3.sl2.s1","nome":"[Subetapa livre 1]","slot":true,"visivel":false},{"id":"2.3.sl2.s2","nome":"[Subetapa livre 2]","slot":true,"visivel":false},{"id":"2.3.sl2.s3","nome":"[Subetapa livre 3]","slot":true,"visivel":false}]}]},{"codigo":"2.4","nome":"Cobertura","itens":[{"codigo":"2.4.1","nome":"Telhado Cerâmico Colonial","subetapas":[{"id":"2.4.1.1","nome":"Execução da área técnica para caixa d'água"},{"id":"2.4.1.2","nome":"Execução da estrutura em madeira"},{"id":"2.4.1.3","nome":"Colocação do telhamento em telha cerâmica colonial"},{"id":"2.4.1.4","nome":"Cumeeiras e arremates"},{"id":"2.4.1.5","nome":"Calhas e rufos"},{"id":"2.4.1.6","nome":"Execução de suportes/bases para condensadores de ar condicionado"},{"id":"2.4.1.s1","nome":"[Subetapa livre 1]","slot":true,"visivel":false},{"id":"2.4.1.s2","nome":"[Subetapa livre 2]","slot":true,"visivel":false},{"id":"2.4.1.s3","nome":"[Subetapa livre 3]","slot":true,"visivel":false}]},{"codigo":"2.4.2","nome":"Telhado Embutido","subetapas":[{"id":"2.4.2.1","nome":"Execução da área técnica para caixa d'água"},{"id":"2.4.2.2","nome":"Execução da estrutura metálica"},{"id":"2.4.2.3","nome":"Colocação do telhamento em telha de zinco"},{"id":"2.4.2.4","nome":"Cumeeiras e arremates"},{"id":"2.4.2.5","nome":"Execução de contrapiso"},{"id":"2.4.2.6","nome":"Impermeabilização com manta asfáltica"},{"id":"2.4.2.7","nome":"Execução de proteção mecânica"},{"id":"2.4.2.8","nome":"Execução de suportes/bases para condensadores de ar condicionado"},{"id":"2.4.2.s1","nome":"[Subetapa livre 1]","slot":true,"visivel":false},{"id":"2.4.2.s2","nome":"[Subetapa livre 2]","slot":true,"visivel":false},{"id":"2.4.2.s3","nome":"[Subetapa livre 3]","slot":true,"visivel":false}]},{"codigo":"2.4.3","nome":"Cobertura em Treliça Metálica com Telha Sanduíche","subetapas":[{"id":"2.4.3.1","nome":"Execução da estrutura em treliça metálica"},{"id":"2.4.3.2","nome":"Colocação das telhas sanduíche"},{"id":"2.4.3.3","nome":"Cumeeiras e arremates"},{"id":"2.4.3.4","nome":"Calhas e rufos"},{"id":"2.4.3.5","nome":"Execução de estrutura para recebimento de ACM ou placas cimentícias"},{"id":"2.4.3.s1","nome":"[Subetapa livre 1]","slot":true,"visivel":false},{"id":"2.4.3.s2","nome":"[Subetapa livre 2]","slot":true,"visivel":false},{"id":"2.4.3.s3","nome":"[Subetapa livre 3]","slot":true,"visivel":false}]},{"codigo":"2.4.sl1","nome":"[Item livre 1]","slot":true,"visivel":false,"subetapas":[{"id":"2.4.sl1.s1","nome":"[Subetapa livre 1]","slot":true,"visivel":false},{"id":"2.4.sl1.s2","nome":"[Subetapa livre 2]","slot":true,"visivel":false},{"id":"2.4.sl1.s3","nome":"[Subetapa livre 3]","slot":true,"visivel":false}]},{"codigo":"2.4.sl2","nome":"[Item livre 2]","slot":true,"visivel":false,"subetapas":[{"id":"2.4.sl2.s1","nome":"[Subetapa livre 1]","slot":true,"visivel":false},{"id":"2.4.sl2.s2","nome":"[Subetapa livre 2]","slot":true,"visivel":false},{"id":"2.4.sl2.s3","nome":"[Subetapa livre 3]","slot":true,"visivel":false}]}]},{"codigo":"2.5","nome":"Instalações","itens":[{"codigo":"2.5.1","nome":"Esgoto Sanitário","subetapas":[{"id":"2.5.1.1","nome":"Execução das esperas de esgoto sanitário (pré-laje)"},{"id":"2.5.1.2","nome":"Execução das esperas de drenos de ar condicionado (pré-laje)"},{"id":"2.5.1.3","nome":"Execução das esperas de gordura (pré-laje)"},{"id":"2.5.1.4","nome":"Execução das esperas de ventilação — tubo de queda (pré-laje)"},{"id":"2.5.1.5","nome":"Execução da rede de coleta interna"},{"id":"2.5.1.6","nome":"Execução de caixas de inspeção"},{"id":"2.5.1.7","nome":"Execução de caixa de gordura"},{"id":"2.5.1.8","nome":"Execução do tubo de queda e ventilação"},{"id":"2.5.1.9","nome":"Execução da rede externa"},{"id":"2.5.1.10","nome":"Execução de fossa/filtro/sumidouro"},{"id":"2.5.1.11","nome":"Testes e verificação da rede"},{"id":"2.5.1.s1","nome":"[Subetapa livre 1]","slot":true,"visivel":false},{"id":"2.5.1.s2","nome":"[Subetapa livre 2]","slot":true,"visivel":false},{"id":"2.5.1.s3","nome":"[Subetapa livre 3]","slot":true,"visivel":false}]},{"codigo":"2.5.2","nome":"Águas Pluviais","subetapas":[{"id":"2.5.2.1","nome":"Execução das esperas para águas pluviais (pré-laje)"},{"id":"2.5.2.2","nome":"Execução das descidas pluviais"},{"id":"2.5.2.3","nome":"Execução de caixas de passagem"},{"id":"2.5.2.4","nome":"Execução da rede externa até boca de lobo"},{"id":"2.5.2.5","nome":"Testes e verificação da rede"},{"id":"2.5.2.6","nome":"Execução de canaletas de coleta (drenagem externa)"},{"id":"2.5.2.7","nome":"Execução de caixas de passagem externas"},{"id":"2.5.2.8","nome":"Destinação para boca de lobo"},{"id":"2.5.2.s1","nome":"[Subetapa livre 1]","slot":true,"visivel":false},{"id":"2.5.2.s2","nome":"[Subetapa livre 2]","slot":true,"visivel":false},{"id":"2.5.2.s3","nome":"[Subetapa livre 3]","slot":true,"visivel":false}]},{"codigo":"2.5.3","nome":"Água Fria","subetapas":[{"id":"2.5.3.1","nome":"Execução das esperas de alimentação do reservatório inferior (pré-laje)"},{"id":"2.5.3.2","nome":"Execução das esperas de distribuição interna (pré-laje)"},{"id":"2.5.3.3","nome":"Instalação do reservatório inferior (poliestireno)"},{"id":"2.5.3.4","nome":"Instalação do reservatório superior (poliestireno)"},{"id":"2.5.3.5","nome":"Execução da rede de alimentação — rua para reservatório inferior"},{"id":"2.5.3.6","nome":"Execução da rede de bombeamento — reservatório inferior para superior"},{"id":"2.5.3.7","nome":"Instalação de bomba de recalque"},{"id":"2.5.3.8","nome":"Execução de barrilete do reservatório superior"},{"id":"2.5.3.9","nome":"Execução de extravasor e limpeza dos reservatórios"},{"id":"2.5.3.10","nome":"Execução da rede de distribuição em PVC embutida"},{"id":"2.5.3.11","nome":"Execução de pontos de água fria"},{"id":"2.5.3.12","nome":"Instalação de registros e válvulas"},{"id":"2.5.3.13","nome":"Testes e verificação da rede"},{"id":"2.5.3.s1","nome":"[Subetapa livre 1]","slot":true,"visivel":false},{"id":"2.5.3.s2","nome":"[Subetapa livre 2]","slot":true,"visivel":false},{"id":"2.5.3.s3","nome":"[Subetapa livre 3]","slot":true,"visivel":false}]},{"codigo":"2.5.4","nome":"Instalações Elétricas","subetapas":[{"id":"2.5.4.1","nome":"Instalação de novo poste"},{"id":"2.5.4.2","nome":"Troca de poste existente"},{"id":"2.5.4.3","nome":"Execução do ramal de entrada"},{"id":"2.5.4.4","nome":"Execução do padrão de medição"},{"id":"2.5.4.5","nome":"Solicitação de aumento de carga junto à concessionária"},{"id":"2.5.4.6","nome":"Execução e instalação do QGBT"},{"id":"2.5.4.7","nome":"Execução e instalação de quadros de distribuição setoriais"},{"id":"2.5.4.8","nome":"Execução de eletrodutos embutidos"},{"id":"2.5.4.9","nome":"Execução de eletrocalhas"},{"id":"2.5.4.10","nome":"Execução de fiação e cabeamento"},{"id":"2.5.4.11","nome":"Execução de pontos de iluminação interna"},{"id":"2.5.4.12","nome":"Execução de pontos de iluminação externa"},{"id":"2.5.4.13","nome":"Execução de iluminação de emergência"},{"id":"2.5.4.14","nome":"Execução de pontos de tomadas e interruptores"},{"id":"2.5.4.15","nome":"Execução de circuitos dedicados"},{"id":"2.5.4.16","nome":"Execução de caixas de passagem para rede de internet"},{"id":"2.5.4.17","nome":"Execução de eletroduto para passagem de gerador"},{"id":"2.5.4.18","nome":"Testes da rede elétrica"},{"id":"2.5.4.19","nome":"Verificação e energização"},{"id":"2.5.4.s1","nome":"[Subetapa livre 1]","slot":true,"visivel":false},{"id":"2.5.4.s2","nome":"[Subetapa livre 2]","slot":true,"visivel":false},{"id":"2.5.4.s3","nome":"[Subetapa livre 3]","slot":true,"visivel":false}]},{"codigo":"2.5.sl1","nome":"[Item livre 1]","slot":true,"visivel":false,"subetapas":[{"id":"2.5.sl1.s1","nome":"[Subetapa livre 1]","slot":true,"visivel":false},{"id":"2.5.sl1.s2","nome":"[Subetapa livre 2]","slot":true,"visivel":false},{"id":"2.5.sl1.s3","nome":"[Subetapa livre 3]","slot":true,"visivel":false}]},{"codigo":"2.5.sl2","nome":"[Item livre 2]","slot":true,"visivel":false,"subetapas":[{"id":"2.5.sl2.s1","nome":"[Subetapa livre 1]","slot":true,"visivel":false},{"id":"2.5.sl2.s2","nome":"[Subetapa livre 2]","slot":true,"visivel":false},{"id":"2.5.sl2.s3","nome":"[Subetapa livre 3]","slot":true,"visivel":false}]}]},{"codigo":"2.6","nome":"Acabamentos","itens":[{"codigo":"2.6.1","nome":"Revestimentos de Paredes","subetapas":[{"id":"2.6.1.1","nome":"Áreas molhadas (alvenaria) — chapisco"},{"id":"2.6.1.2","nome":"Áreas molhadas (alvenaria) — emboço"},{"id":"2.6.1.3","nome":"Áreas molhadas (alvenaria) — revestimento cerâmico"},{"id":"2.6.1.4","nome":"Áreas molhadas (alvenaria) — rejuntamento"},{"id":"2.6.1.5","nome":"Áreas molhadas (drywall) — tratamento de juntas"},{"id":"2.6.1.6","nome":"Áreas molhadas (drywall) — revestimento cerâmico e rejuntamento"},{"id":"2.6.1.7","nome":"Áreas secas (alvenaria) — chapisco, emboço, massa corrida"},{"id":"2.6.1.8","nome":"Áreas secas (drywall) — tratamento de juntas e massa corrida"},{"id":"2.6.1.9","nome":"Paredes externas — chapisco e emboço"},{"id":"2.6.1.10","nome":"Paredes externas — assentamento de pastilha"},{"id":"2.6.1.11","nome":"Paredes externas — rejuntamento"},{"id":"2.6.1.12","nome":"Paredes externas — massa corrida acima da pastilha"},{"id":"2.6.1.13","nome":"Platibanda — chapisco, emboço, pastilha, rejuntamento"},{"id":"2.6.1.s1","nome":"[Subetapa livre 1]","slot":true,"visivel":false},{"id":"2.6.1.s2","nome":"[Subetapa livre 2]","slot":true,"visivel":false},{"id":"2.6.1.s3","nome":"[Subetapa livre 3]","slot":true,"visivel":false}]},{"codigo":"2.6.2","nome":"Pisos","subetapas":[{"id":"2.6.2.1","nome":"Porcelanato — execução de contrapiso"},{"id":"2.6.2.2","nome":"Porcelanato — assentamento"},{"id":"2.6.2.3","nome":"Porcelanato — rejuntamento"},{"id":"2.6.2.4","nome":"Porcelanato — execução de rodapé"},{"id":"2.6.2.5","nome":"Piso vinílico — massa autonivelante"},{"id":"2.6.2.6","nome":"Piso vinílico — cola e assentamento"},{"id":"2.6.2.7","nome":"Piso vinílico — rodapé em PVC"},{"id":"2.6.2.8","nome":"Piso externo — calçamento em volta da edificação"},{"id":"2.6.2.9","nome":"Piso externo — calçamento de acesso"},{"id":"2.6.2.10","nome":"Piso externo — preparação de base"},{"id":"2.6.2.11","nome":"Piso externo — assentamento de intertravado"},{"id":"2.6.2.12","nome":"Piso externo — execução de concreto ou concreto polido"},{"id":"2.6.2.13","nome":"Piso externo — implantação de grama"},{"id":"2.6.2.s1","nome":"[Subetapa livre 1]","slot":true,"visivel":false},{"id":"2.6.2.s2","nome":"[Subetapa livre 2]","slot":true,"visivel":false},{"id":"2.6.2.s3","nome":"[Subetapa livre 3]","slot":true,"visivel":false}]},{"codigo":"2.6.3","nome":"Forro","subetapas":[{"id":"2.6.3.1","nome":"Drywall — execução da estrutura metálica"},{"id":"2.6.3.2","nome":"Drywall — fixação das placas"},{"id":"2.6.3.3","nome":"Drywall — execução de visitas para acesso à rede de internet"},{"id":"2.6.3.4","nome":"Drywall — execução de visitas para acesso ao reservatório superior"},{"id":"2.6.3.5","nome":"Drywall — tratamento de juntas e parafusos"},{"id":"2.6.3.6","nome":"Drywall — execução de massa corrida"},{"id":"2.6.3.7","nome":"PVC — execução da estrutura metálica"},{"id":"2.6.3.8","nome":"PVC — fixação das placas"},{"id":"2.6.3.9","nome":"PVC — execução de visitas para acesso à rede de internet"},{"id":"2.6.3.10","nome":"PVC — execução de visitas para acesso ao reservatório superior"},{"id":"2.6.3.11","nome":"PVC — instalação de rodaforro"},{"id":"2.6.3.s1","nome":"[Subetapa livre 1]","slot":true,"visivel":false},{"id":"2.6.3.s2","nome":"[Subetapa livre 2]","slot":true,"visivel":false},{"id":"2.6.3.s3","nome":"[Subetapa livre 3]","slot":true,"visivel":false}]},{"codigo":"2.6.4","nome":"Pintura","subetapas":[{"id":"2.6.4.1","nome":"Pintura interna — aplicação de selador"},{"id":"2.6.4.2","nome":"Pintura interna — teto em tinta PVA"},{"id":"2.6.4.3","nome":"Pintura interna — paredes em tinta superlavável"},{"id":"2.6.4.4","nome":"Pintura externa — aplicação de selador"},{"id":"2.6.4.5","nome":"Pintura externa — paredes em tinta PVA"},{"id":"2.6.4.s1","nome":"[Subetapa livre 1]","slot":true,"visivel":false},{"id":"2.6.4.s2","nome":"[Subetapa livre 2]","slot":true,"visivel":false},{"id":"2.6.4.s3","nome":"[Subetapa livre 3]","slot":true,"visivel":false}]},{"codigo":"2.6.5","nome":"Louças e Metais","subetapas":[{"id":"2.6.5.1","nome":"Banheiro convencional — bacia sanitária"},{"id":"2.6.5.2","nome":"Banheiro convencional — lavatório"},{"id":"2.6.5.3","nome":"Banheiro convencional — torneiras, registros, duchas, chuveiros"},{"id":"2.6.5.4","nome":"Banheiro PCD — bacia sanitária PCD"},{"id":"2.6.5.5","nome":"Banheiro PCD — lavatório PCD"},{"id":"2.6.5.6","nome":"Banheiro PCD — torneiras, registros, duchas, chuveiros, barras de apoio"},{"id":"2.6.5.7","nome":"Consultório — lavatório (torneira acionamento não manual)"},{"id":"2.6.5.8","nome":"Sala de procedimentos — bancada com pia"},{"id":"2.6.5.9","nome":"Sala de curativos — bancada com pia"},{"id":"2.6.5.10","nome":"Sala de curativos — lavapés"},{"id":"2.6.5.11","nome":"Sala de esterilização — bancada com pia e lavatório"},{"id":"2.6.5.12","nome":"Expurgo — bancada com cuba"},{"id":"2.6.5.13","nome":"Escovatório"},{"id":"2.6.5.14","nome":"DML — tanque"},{"id":"2.6.5.15","nome":"Copa/cozinha — pia"},{"id":"2.6.5.16","nome":"Torneiras e registros nos ambientes assistenciais"},{"id":"2.6.5.s1","nome":"[Subetapa livre 1]","slot":true,"visivel":false},{"id":"2.6.5.s2","nome":"[Subetapa livre 2]","slot":true,"visivel":false},{"id":"2.6.5.s3","nome":"[Subetapa livre 3]","slot":true,"visivel":false}]},{"codigo":"2.6.6","nome":"Marcenaria","subetapas":[{"id":"2.6.6.1","nome":"Balcão de recepção em alvenaria com tampo em granito e pastilha"},{"id":"2.6.6.2","nome":"Balcão de recepção em MDF"},{"id":"2.6.6.s1","nome":"[Subetapa livre 1]","slot":true,"visivel":false},{"id":"2.6.6.s2","nome":"[Subetapa livre 2]","slot":true,"visivel":false},{"id":"2.6.6.s3","nome":"[Subetapa livre 3]","slot":true,"visivel":false}]},{"codigo":"2.6.7","nome":"Esquadrias","subetapas":[{"id":"2.6.7.1","nome":"Janelas em vidro temperado"},{"id":"2.6.7.2","nome":"Janelas em esquadria de alumínio"},{"id":"2.6.7.3","nome":"Portas internas em madeira com aduela"},{"id":"2.6.7.4","nome":"Portas internas prontas para drywall"},{"id":"2.6.7.5","nome":"Portas externas em vidro temperado"},{"id":"2.6.7.6","nome":"Portas externas em esquadria de alumínio"},{"id":"2.6.7.s1","nome":"[Subetapa livre 1]","slot":true,"visivel":false},{"id":"2.6.7.s2","nome":"[Subetapa livre 2]","slot":true,"visivel":false},{"id":"2.6.7.s3","nome":"[Subetapa livre 3]","slot":true,"visivel":false}]},{"codigo":"2.6.8","nome":"Serviços Complementares","subetapas":[{"id":"2.6.8.1","nome":"Remoção de entulho e materiais grosseiros"},{"id":"2.6.8.2","nome":"Limpeza bruta interna"},{"id":"2.6.8.3","nome":"Execução de muro"},{"id":"2.6.8.4","nome":"Execução de gradil"},{"id":"2.6.8.5","nome":"Execução de pergolado"},{"id":"2.6.8.s1","nome":"[Subetapa livre 1]","slot":true,"visivel":false},{"id":"2.6.8.s2","nome":"[Subetapa livre 2]","slot":true,"visivel":false},{"id":"2.6.8.s3","nome":"[Subetapa livre 3]","slot":true,"visivel":false}]},{"codigo":"2.6.sl1","nome":"[Item livre 1]","slot":true,"visivel":false,"subetapas":[{"id":"2.6.sl1.s1","nome":"[Subetapa livre 1]","slot":true,"visivel":false},{"id":"2.6.sl1.s2","nome":"[Subetapa livre 2]","slot":true,"visivel":false},{"id":"2.6.sl1.s3","nome":"[Subetapa livre 3]","slot":true,"visivel":false}]},{"codigo":"2.6.sl2","nome":"[Item livre 2]","slot":true,"visivel":false,"subetapas":[{"id":"2.6.sl2.s1","nome":"[Subetapa livre 1]","slot":true,"visivel":false},{"id":"2.6.sl2.s2","nome":"[Subetapa livre 2]","slot":true,"visivel":false},{"id":"2.6.sl2.s3","nome":"[Subetapa livre 3]","slot":true,"visivel":false}]}]},{"codigo":"2.sp1","nome":"[Subpacote livre 1]","slot":true,"visivel":false,"itens":[{"codigo":"2.sp1.sl1","nome":"[Item livre 1]","slot":true,"visivel":false,"subetapas":[{"id":"2.sp1.sl1.s1","nome":"[Subetapa livre 1]","slot":true,"visivel":false},{"id":"2.sp1.sl1.s2","nome":"[Subetapa livre 2]","slot":true,"visivel":false},{"id":"2.sp1.sl1.s3","nome":"[Subetapa livre 3]","slot":true,"visivel":false}]},{"codigo":"2.sp1.sl2","nome":"[Item livre 2]","slot":true,"visivel":false,"subetapas":[{"id":"2.sp1.sl2.s1","nome":"[Subetapa livre 1]","slot":true,"visivel":false},{"id":"2.sp1.sl2.s2","nome":"[Subetapa livre 2]","slot":true,"visivel":false},{"id":"2.sp1.sl2.s3","nome":"[Subetapa livre 3]","slot":true,"visivel":false}]},{"codigo":"2.sp1.sl3","nome":"[Item livre 3]","slot":true,"visivel":false,"subetapas":[{"id":"2.sp1.sl3.s1","nome":"[Subetapa livre 1]","slot":true,"visivel":false},{"id":"2.sp1.sl3.s2","nome":"[Subetapa livre 2]","slot":true,"visivel":false},{"id":"2.sp1.sl3.s3","nome":"[Subetapa livre 3]","slot":true,"visivel":false}]}]},{"codigo":"2.sp2","nome":"[Subpacote livre 2]","slot":true,"visivel":false,"itens":[{"codigo":"2.sp2.sl1","nome":"[Item livre 1]","slot":true,"visivel":false,"subetapas":[{"id":"2.sp2.sl1.s1","nome":"[Subetapa livre 1]","slot":true,"visivel":false},{"id":"2.sp2.sl1.s2","nome":"[Subetapa livre 2]","slot":true,"visivel":false},{"id":"2.sp2.sl1.s3","nome":"[Subetapa livre 3]","slot":true,"visivel":false}]},{"codigo":"2.sp2.sl2","nome":"[Item livre 2]","slot":true,"visivel":false,"subetapas":[{"id":"2.sp2.sl2.s1","nome":"[Subetapa livre 1]","slot":true,"visivel":false},{"id":"2.sp2.sl2.s2","nome":"[Subetapa livre 2]","slot":true,"visivel":false},{"id":"2.sp2.sl2.s3","nome":"[Subetapa livre 3]","slot":true,"visivel":false}]},{"codigo":"2.sp2.sl3","nome":"[Item livre 3]","slot":true,"visivel":false,"subetapas":[{"id":"2.sp2.sl3.s1","nome":"[Subetapa livre 1]","slot":true,"visivel":false},{"id":"2.sp2.sl3.s2","nome":"[Subetapa livre 2]","slot":true,"visivel":false},{"id":"2.sp2.sl3.s3","nome":"[Subetapa livre 3]","slot":true,"visivel":false}]}]}]},{"codigo":"3","nome":"Demolições e Adequações do Existente","itens":[{"codigo":"3.1","nome":"Marco de Migração","subetapas":[{"id":"3.1.1","nome":"Confirmação de conclusão e aprovação do bloco novo"},{"id":"3.1.2","nome":"Migração da unidade para o bloco novo"},{"id":"3.1.3","nome":"Instalação de isolamento entre blocos"},{"id":"3.1.4","nome":"Liberação formal do bloco existente para obras"},{"id":"3.1.s1","nome":"[Subetapa livre 1]","slot":true,"visivel":false},{"id":"3.1.s2","nome":"[Subetapa livre 2]","slot":true,"visivel":false},{"id":"3.1.s3","nome":"[Subetapa livre 3]","slot":true,"visivel":false}]},{"codigo":"3.2","nome":"Demolições Seletivas","subetapas":[{"id":"3.2.1","nome":"Demolição de paredes internas"},{"id":"3.2.2","nome":"Demolição de elementos estruturais — vigas e pilares"},{"id":"3.2.3","nome":"Demolição de revestimentos de paredes"},{"id":"3.2.4","nome":"Demolição de pisos"},{"id":"3.2.5","nome":"Demolição de forros"},{"id":"3.2.6","nome":"Remoção de esquadrias"},{"id":"3.2.7","nome":"Remoção de instalações elétricas existentes"},{"id":"3.2.8","nome":"Remoção de instalações hidrossanitárias existentes"},{"id":"3.2.9","nome":"Destinação de resíduos de demolição"},{"id":"3.2.s1","nome":"[Subetapa livre 1]","slot":true,"visivel":false},{"id":"3.2.s2","nome":"[Subetapa livre 2]","slot":true,"visivel":false},{"id":"3.2.s3","nome":"[Subetapa livre 3]","slot":true,"visivel":false}]},{"codigo":"3.3","nome":"Adequações Estruturais","subetapas":[{"id":"3.3.1","nome":"Reforço de vigas"},{"id":"3.3.2","nome":"Reforço de pilares"},{"id":"3.3.3","nome":"Abertura de vãos para integração com bloco novo"},{"id":"3.3.4","nome":"Execução de novas alvenarias de vedação"},{"id":"3.3.5","nome":"Execução de vergas e contravergas em novos vãos"},{"id":"3.3.6","nome":"Impermeabilização"},{"id":"3.3.s1","nome":"[Subetapa livre 1]","slot":true,"visivel":false},{"id":"3.3.s2","nome":"[Subetapa livre 2]","slot":true,"visivel":false},{"id":"3.3.s3","nome":"[Subetapa livre 3]","slot":true,"visivel":false}]},{"codigo":"3.4","nome":"Instalações","subetapas":[{"id":"3.4.1","nome":"Execução de instalações elétricas (conforme 2.5.4)"},{"id":"3.4.2","nome":"Execução de instalações hidrossanitárias (conforme 2.5.1, 2.5.2 e 2.5.3)"},{"id":"3.4.s1","nome":"[Subetapa livre 1]","slot":true,"visivel":false},{"id":"3.4.s2","nome":"[Subetapa livre 2]","slot":true,"visivel":false},{"id":"3.4.s3","nome":"[Subetapa livre 3]","slot":true,"visivel":false}]},{"codigo":"3.5","nome":"Acabamentos","subetapas":[{"id":"3.5.1","nome":"Execução de acabamentos (conforme Pacote 2.6)"},{"id":"3.5.s1","nome":"[Subetapa livre 1]","slot":true,"visivel":false},{"id":"3.5.s2","nome":"[Subetapa livre 2]","slot":true,"visivel":false},{"id":"3.5.s3","nome":"[Subetapa livre 3]","slot":true,"visivel":false}]},{"codigo":"3.6","nome":"Integração dos Blocos","subetapas":[{"id":"3.6.1","nome":"Remoção do isolamento provisório entre blocos"},{"id":"3.6.2","nome":"União de alvenarias na interface dos blocos"},{"id":"3.6.3","nome":"União de vigas na interface dos blocos"},{"id":"3.6.4","nome":"União de laje na interface dos blocos"},{"id":"3.6.5","nome":"Alinhamento e nivelamento de pisos entre blocos"},{"id":"3.6.6","nome":"Alinhamento de forros entre blocos"},{"id":"3.6.7","nome":"Acabamentos de interface (revestimentos, pintura, rodapés)"},{"id":"3.6.8","nome":"Instalações de interface (elétrica, hidráulica)"},{"id":"3.6.s1","nome":"[Subetapa livre 1]","slot":true,"visivel":false},{"id":"3.6.s2","nome":"[Subetapa livre 2]","slot":true,"visivel":false},{"id":"3.6.s3","nome":"[Subetapa livre 3]","slot":true,"visivel":false}]},{"codigo":"3.sl1","nome":"[Item livre 1]","slot":true,"visivel":false,"subetapas":[{"id":"3.sl1.s1","nome":"[Subetapa livre 1]","slot":true,"visivel":false},{"id":"3.sl1.s2","nome":"[Subetapa livre 2]","slot":true,"visivel":false},{"id":"3.sl1.s3","nome":"[Subetapa livre 3]","slot":true,"visivel":false}]},{"codigo":"3.sl2","nome":"[Item livre 2]","slot":true,"visivel":false,"subetapas":[{"id":"3.sl2.s1","nome":"[Subetapa livre 1]","slot":true,"visivel":false},{"id":"3.sl2.s2","nome":"[Subetapa livre 2]","slot":true,"visivel":false},{"id":"3.sl2.s3","nome":"[Subetapa livre 3]","slot":true,"visivel":false}]}],"grupos_slot":[{"codigo":"3.sp1","nome":"[Subpacote livre 1]","slot":true,"visivel":false,"itens":[{"codigo":"3.sp1.sl1","nome":"[Item livre 1]","slot":true,"visivel":false,"subetapas":[{"id":"3.sp1.sl1.s1","nome":"[Subetapa livre 1]","slot":true,"visivel":false},{"id":"3.sp1.sl1.s2","nome":"[Subetapa livre 2]","slot":true,"visivel":false},{"id":"3.sp1.sl1.s3","nome":"[Subetapa livre 3]","slot":true,"visivel":false}]},{"codigo":"3.sp1.sl2","nome":"[Item livre 2]","slot":true,"visivel":false,"subetapas":[{"id":"3.sp1.sl2.s1","nome":"[Subetapa livre 1]","slot":true,"visivel":false},{"id":"3.sp1.sl2.s2","nome":"[Subetapa livre 2]","slot":true,"visivel":false},{"id":"3.sp1.sl2.s3","nome":"[Subetapa livre 3]","slot":true,"visivel":false}]},{"codigo":"3.sp1.sl3","nome":"[Item livre 3]","slot":true,"visivel":false,"subetapas":[{"id":"3.sp1.sl3.s1","nome":"[Subetapa livre 1]","slot":true,"visivel":false},{"id":"3.sp1.sl3.s2","nome":"[Subetapa livre 2]","slot":true,"visivel":false},{"id":"3.sp1.sl3.s3","nome":"[Subetapa livre 3]","slot":true,"visivel":false}]}]},{"codigo":"3.sp2","nome":"[Subpacote livre 2]","slot":true,"visivel":false,"itens":[{"codigo":"3.sp2.sl1","nome":"[Item livre 1]","slot":true,"visivel":false,"subetapas":[{"id":"3.sp2.sl1.s1","nome":"[Subetapa livre 1]","slot":true,"visivel":false},{"id":"3.sp2.sl1.s2","nome":"[Subetapa livre 2]","slot":true,"visivel":false},{"id":"3.sp2.sl1.s3","nome":"[Subetapa livre 3]","slot":true,"visivel":false}]},{"codigo":"3.sp2.sl2","nome":"[Item livre 2]","slot":true,"visivel":false,"subetapas":[{"id":"3.sp2.sl2.s1","nome":"[Subetapa livre 1]","slot":true,"visivel":false},{"id":"3.sp2.sl2.s2","nome":"[Subetapa livre 2]","slot":true,"visivel":false},{"id":"3.sp2.sl2.s3","nome":"[Subetapa livre 3]","slot":true,"visivel":false}]},{"codigo":"3.sp2.sl3","nome":"[Item livre 3]","slot":true,"visivel":false,"subetapas":[{"id":"3.sp2.sl3.s1","nome":"[Subetapa livre 1]","slot":true,"visivel":false},{"id":"3.sp2.sl3.s2","nome":"[Subetapa livre 2]","slot":true,"visivel":false},{"id":"3.sp2.sl3.s3","nome":"[Subetapa livre 3]","slot":true,"visivel":false}]}]}]},{"codigo":"X","nome":"[Pacote extra]","slot":true,"visivel":false,"grupos":[{"codigo":"X.sp1","nome":"[Subpacote livre 1]","slot":true,"visivel":false,"itens":[{"codigo":"X.sp1.sl1","nome":"[Item livre 1]","slot":true,"visivel":false,"subetapas":[{"id":"X.sp1.sl1.s1","nome":"[Subetapa livre 1]","slot":true,"visivel":false},{"id":"X.sp1.sl1.s2","nome":"[Subetapa livre 2]","slot":true,"visivel":false},{"id":"X.sp1.sl1.s3","nome":"[Subetapa livre 3]","slot":true,"visivel":false}]},{"codigo":"X.sp1.sl2","nome":"[Item livre 2]","slot":true,"visivel":false,"subetapas":[{"id":"X.sp1.sl2.s1","nome":"[Subetapa livre 1]","slot":true,"visivel":false},{"id":"X.sp1.sl2.s2","nome":"[Subetapa livre 2]","slot":true,"visivel":false},{"id":"X.sp1.sl2.s3","nome":"[Subetapa livre 3]","slot":true,"visivel":false}]},{"codigo":"X.sp1.sl3","nome":"[Item livre 3]","slot":true,"visivel":false,"subetapas":[{"id":"X.sp1.sl3.s1","nome":"[Subetapa livre 1]","slot":true,"visivel":false},{"id":"X.sp1.sl3.s2","nome":"[Subetapa livre 2]","slot":true,"visivel":false},{"id":"X.sp1.sl3.s3","nome":"[Subetapa livre 3]","slot":true,"visivel":false}]}]},{"codigo":"X.sp2","nome":"[Subpacote livre 2]","slot":true,"visivel":false,"itens":[{"codigo":"X.sp2.sl1","nome":"[Item livre 1]","slot":true,"visivel":false,"subetapas":[{"id":"X.sp2.sl1.s1","nome":"[Subetapa livre 1]","slot":true,"visivel":false},{"id":"X.sp2.sl1.s2","nome":"[Subetapa livre 2]","slot":true,"visivel":false},{"id":"X.sp2.sl1.s3","nome":"[Subetapa livre 3]","slot":true,"visivel":false}]},{"codigo":"X.sp2.sl2","nome":"[Item livre 2]","slot":true,"visivel":false,"subetapas":[{"id":"X.sp2.sl2.s1","nome":"[Subetapa livre 1]","slot":true,"visivel":false},{"id":"X.sp2.sl2.s2","nome":"[Subetapa livre 2]","slot":true,"visivel":false},{"id":"X.sp2.sl2.s3","nome":"[Subetapa livre 3]","slot":true,"visivel":false}]},{"codigo":"X.sp2.sl3","nome":"[Item livre 3]","slot":true,"visivel":false,"subetapas":[{"id":"X.sp2.sl3.s1","nome":"[Subetapa livre 1]","slot":true,"visivel":false},{"id":"X.sp2.sl3.s2","nome":"[Subetapa livre 2]","slot":true,"visivel":false},{"id":"X.sp2.sl3.s3","nome":"[Subetapa livre 3]","slot":true,"visivel":false}]}]},{"codigo":"X.sp3","nome":"[Subpacote livre 3]","slot":true,"visivel":false,"itens":[{"codigo":"X.sp3.sl1","nome":"[Item livre 1]","slot":true,"visivel":false,"subetapas":[{"id":"X.sp3.sl1.s1","nome":"[Subetapa livre 1]","slot":true,"visivel":false},{"id":"X.sp3.sl1.s2","nome":"[Subetapa livre 2]","slot":true,"visivel":false},{"id":"X.sp3.sl1.s3","nome":"[Subetapa livre 3]","slot":true,"visivel":false}]},{"codigo":"X.sp3.sl2","nome":"[Item livre 2]","slot":true,"visivel":false,"subetapas":[{"id":"X.sp3.sl2.s1","nome":"[Subetapa livre 1]","slot":true,"visivel":false},{"id":"X.sp3.sl2.s2","nome":"[Subetapa livre 2]","slot":true,"visivel":false},{"id":"X.sp3.sl2.s3","nome":"[Subetapa livre 3]","slot":true,"visivel":false}]},{"codigo":"X.sp3.sl3","nome":"[Item livre 3]","slot":true,"visivel":false,"subetapas":[{"id":"X.sp3.sl3.s1","nome":"[Subetapa livre 1]","slot":true,"visivel":false},{"id":"X.sp3.sl3.s2","nome":"[Subetapa livre 2]","slot":true,"visivel":false},{"id":"X.sp3.sl3.s3","nome":"[Subetapa livre 3]","slot":true,"visivel":false}]}]}]}]};
+
+const S={
+  get(k,d=null){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch{return d}},
+  set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch{}}
+};
+
+class Obra{
+  constructor(n,e,m,i,t,s,lat,lng){
+    this.id_obra=n.toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,15)+'-'+new Date().getFullYear();
+    this.nome=n;this.endereco=e;this.municipio=m||'';
+    this.dataInicio=i||'';this.dataTermino=t||'';this.status=s||'Em andamento';
+    this.lat=lat||null;this.lng=lng||null;
+    this.dataCriacao=new Date().toISOString();
+    this.eap=JSON.parse(JSON.stringify(TPL));
+    this.registros={};this.alertas={};this.historico=[];
+    this.ultimaExportacao=null;
+  }
+  _vis(s){return s.visivel!==false}
+  _visIt(i){return i.visivel!==false}
+  pctGeral(){
+    const ps=this.eap.pacotes.filter(p=>this._visIt(p));
+    if(!ps.length)return 0;
+    return Math.round(ps.reduce((s,p)=>s+this.pctPacote(p),0)/ps.length);
+  }
+  pctPacote(p){
+    const todos=this._getItens(p).filter(i=>this._visIt(i));
+    if(!todos.length)return 0;
+    return Math.round(todos.reduce((s,i)=>s+this.pctItem(i),0)/todos.length);
+  }
+  _getItens(p){
+    let its=[];
+    if(p.grupos)p.grupos.forEach(g=>its.push(...(g.itens||[])));
+    if(p.grupos_slot)p.grupos_slot.forEach(g=>its.push(...(g.itens||[])));
+    if(p.itens)its.push(...p.itens);
+    return its;
+  }
+  pctItem(item){
+    const vs=(item.subetapas||[]).filter(s=>this._vis(s));
+    if(!vs.length)return 0;
+    return Math.round(vs.reduce((s,sub)=>s+(this.registros[sub.id]?.percentual||0),0)/vs.length);
+  }
+  registrar(idSub,pctNovo,data,obs,motivo){
+    const ant=this.registros[idSub];
+    const pctAnt=ant?.percentual||0;
+    const agora=new Date();
+    if(ant&&(agora-new Date(ant.ts))/60000<30){
+      this.registros[idSub]={percentual:pctNovo,data,observacao:obs,ts:agora.toISOString()};return;
+    }
+    const ehReg=pctNovo<pctAnt&&pctNovo<100;
+    if(ehReg&&!motivo)throw new Error('Regressão detectada — justificativa obrigatória');
+    this.registros[idSub]={percentual:pctNovo,data,observacao:obs,ts:agora.toISOString()};
+    this.historico.push({tipo:'reg',sub:idSub,de:pctAnt,para:pctNovo,data,obs,reg:ehReg,motivo,em:agora.toISOString()});
+  }
+  setAlertas(idSub,lista){
+    if(!lista||!lista.length)delete this.alertas[idSub];
+    else this.alertas[idSub]=lista;
+    this.historico.push({tipo:'alerta',sub:idSub,alertas:lista,em:new Date().toISOString()});
+  }
+  getSub(id){
+    let r=null;
+    const enc=its=>{for(const i of its){if(i.subetapas){const s=i.subetapas.find(s=>s.id===id);if(s){r=s;return true}}if(i.itens&&enc(i.itens))return true}};
+    this.eap.pacotes.forEach(p=>enc(this._getItens(p)));
+    return r;
+  }
+  setSubVis(id,v){
+    const enc=its=>{for(const i of its){if(i.subetapas){const s=i.subetapas.find(s=>s.id===id);if(s){s.visivel=v;return true}}if(i.itens&&enc(i.itens))return true}};
+    this.eap.pacotes.forEach(p=>enc(this._getItens(p)));
+  }
+  setItemVis(cod,v){
+    const enc=its=>{for(const i of its){if(i.codigo===cod){i.visivel=v;(i.subetapas||[]).forEach(s=>s.visivel=v);return true}if(i.itens&&enc(i.itens))return true}};
+    this.eap.pacotes.forEach(p=>enc(this._getItens(p)));
+  }
+  setGrupoVis(cod,v){
+    this.eap.pacotes.forEach(p=>{
+      const grupos=[...(p.grupos||[]),...(p.grupos_slot||[])];
+      grupos.forEach(g=>{if(g.codigo===cod){g.visivel=v;(g.itens||[]).forEach(i=>{i.visivel=v;(i.subetapas||[]).forEach(s=>s.visivel=v)})}});
+    });
+  }
+  setPacoteVis(cod,v){
+    const p=this.eap.pacotes.find(p=>p.codigo===cod);
+    if(p){p.visivel=v;this._getItens(p).forEach(i=>{i.visivel=v;(i.subetapas||[]).forEach(s=>s.visivel=v)})}
+  }
+  renomear(cod,nome,tipo){
+    if(tipo==='sub'){const enc=its=>{for(const i of its){if(i.subetapas){const s=i.subetapas.find(s=>s.id===cod);if(s){s.nome=nome;return true}}if(i.itens&&enc(i.itens))return true}};this.eap.pacotes.forEach(p=>enc(this._getItens(p)))}
+    else if(tipo==='item'){const enc=its=>{for(const i of its){if(i.codigo===cod){i.nome=nome;return true}if(i.itens&&enc(i.itens))return true}};this.eap.pacotes.forEach(p=>enc(this._getItens(p)))}
+    else if(tipo==='grupo'){this.eap.pacotes.forEach(p=>{[...(p.grupos||[]),...(p.grupos_slot||[])].forEach(g=>{if(g.codigo===cod)g.nome=nome})})}
+    else if(tipo==='pacote'){const p=this.eap.pacotes.find(p=>p.codigo===cod);if(p)p.nome=nome}
+  }
+  contarAlertas(){
+    const c={rd:0,am:0,azl:0,gn:0};
+    Object.values(this.alertas).forEach(lista=>(lista||[]).forEach(a=>{if(c[a.cor]!==undefined)c[a.cor]++}));
+    return c;
+  }
+  alertasCascata(its){
+    const c={rd:0,am:0,azl:0,gn:0};
+    const enc=its=>its.forEach(i=>{
+      (i.subetapas||[]).forEach(s=>{(this.alertas[s.id]||[]).forEach(a=>{if(c[a.cor]!==undefined)c[a.cor]++})});
+      if(i.itens)enc(i.itens);
+    });
+    enc(its);return c;
+  }
+  corPrio(c){if(c.rd>0)return'rd';if(c.am>0)return'am';if(c.azl>0)return'azl';if(c.gn>0)return'gn';return null}
+}
+
+class Manager{
+  constructor(){
+    this.obras=S.get('obras',[]).map(d=>{
+      const o=new Obra(d.nome,d.endereco,d.municipio,d.dataInicio,d.dataTermino,d.status,d.lat,d.lng);
+      Object.assign(o,{id_obra:d.id_obra,dataCriacao:d.dataCriacao,eap:d.eap,
+        registros:d.registros,alertas:d.alertas||{},historico:d.historico,ultimaExportacao:d.ultimaExportacao||null});
+      return o;
+    });
+    this.atual=null;this.edicao=false;this.subAtual=null;this.expSel={};
+    this.gps={c:{lat:null,lng:null},e:{lat:null,lng:null}};
+    this.csvTipo=null;this._jsonObraId=null;
+  }
+  salvar(){S.set('obras',this.obras)}
+  criar(n,e,m,i,t,s,lat,lng){const o=new Obra(n,e,m,i,t,s,lat,lng);this.obras.push(o);this.salvar();return o}
+  get(id){return this.obras.find(o=>o.id_obra===id)}
+  del(id){this.obras=this.obras.filter(o=>o.id_obra!==id);this.salvar()}
+  merge(oExist,dados){
+    Object.entries(dados.registros||{}).forEach(([id,reg])=>{
+      const at=oExist.registros[id];
+      if(!at||new Date(reg.ts)>new Date(at.ts))oExist.registros[id]=reg;
+    });
+    Object.entries(dados.alertas||{}).forEach(([id,lista])=>{oExist.alertas[id]=lista});
+    const hs=new Set(oExist.historico.map(h=>h.em));
+    (dados.historico||[]).forEach(h=>{if(!hs.has(h.em))oExist.historico.push(h)});
+    oExist.historico.sort((a,b)=>new Date(a.em)-new Date(b.em));
+    this.salvar();
+  }
+}
+
+const M=new Manager();
+let filtroSt='',ordem='nome',motivoSel=null,alertasReg=[];
+const eapAbertos=new Set();
+
+// ── NAV ──────────────────────────────────────────────────────────
+function irPara(tela){
+  document.querySelectorAll('.tela').forEach(e=>e.classList.remove('ativa'));
+  document.getElementById('tela-'+tela).classList.add('ativa');
+  document.querySelectorAll('.nb').forEach(b=>b.classList.remove('on'));
+  const idx={home:0,obra:1,export:2}[tela];
+  if(idx!==undefined)document.querySelectorAll('.nb')[idx].classList.add('on');
+  window.scrollTo(0,0);
+  if(tela==='home')renderHome();
+  else if(tela==='obra')renderEAP();
+  else if(tela==='export')renderExport();
+}
+
+// ── HOME ─────────────────────────────────────────────────────────
+function filtrarSt(el,st){
+  document.querySelectorAll('#chips-st .chip').forEach(c=>c.classList.remove('on'));
+  el.classList.add('on');filtroSt=st;renderHome();
+}
+function ordenar(el,ord){
+  document.querySelectorAll('#chips-ord .chip').forEach(c=>c.classList.remove('on'));
+  el.classList.add('on');ordem=ord;renderHome();
+}
+function renderHome(){
+  const cont=document.getElementById('lista-obras');
+  let obras=[...M.obras];
+  if(filtroSt)obras=obras.filter(o=>o.status===filtroSt);
+  if(ordem==='nome')obras.sort((a,b)=>a.nome.localeCompare(b.nome,'pt'));
+  else if(ordem==='pct')obras.sort((a,b)=>b.pctGeral()-a.pctGeral());
+  else if(ordem==='data')obras.sort((a,b)=>new Date(b.dataCriacao)-new Date(a.dataCriacao));
+  else if(ordem==='alerta')obras.sort((a,b)=>{const ca=a.contarAlertas(),cb=b.contarAlertas();return(cb.rd-ca.rd)||(cb.am-ca.am)||(cb.azl-ca.azl)||(cb.gn-ca.gn)});
+  if(!obras.length){
+    cont.innerHTML=`<div class="empty"><p>Nenhuma obra${filtroSt?" com status '"+filtroSt+"'":""}.</p><p>Clique em "+ Nova obra" para começar.</p></div>`;return;
+  }
+  cont.innerHTML=obras.map(o=>{
+    const pct=o.pctGeral();
+    const c=o.contarAlertas();
+    let b='';
+    if(c.rd)b+=`<div class="badge rd"><div class="sw"></div>${c.rd}</div>`;
+    if(c.am)b+=`<div class="badge am"><div class="sw"></div>${c.am}</div>`;
+    if(c.azl)b+=`<div class="badge azl"><div class="sw"></div>${c.azl}</div>`;
+    if(c.gn)b+=`<div class="badge gn"><div class="sw"></div>${c.gn}</div>`;
+    return`<div class="obra-card" onclick="abrirObra('${o.id_obra}')">
+      <div class="obra-top"><div style="min-width:0">
+        <div class="obra-nome">${o.nome}</div>
+        <div class="obra-id">${o.id_obra}</div>
+        <div class="obra-mun">${o.municipio||o.endereco}</div>
+      </div><div class="obra-pct-col"><div class="obra-pct">${pct}<small>%</small></div></div></div>
+      <div class="pb"><div class="pf${pct===100?' done':''}" style="width:${pct}%"></div></div>
+      <div class="obra-bot">
+        <div class="badges">${b||'<span style="color:var(--tx3);font-size:11px">sem alertas</span>'}</div>
+        <div class="obra-status">${o.status}</div>
+      </div></div>`;
+  }).join('');
+}
+function abrirObra(id){M.atual=M.get(id);irPara('obra')}
+
+// ── EAP ──────────────────────────────────────────────────────────
+function renderEAP(){
+  if(!M.atual)return;
+  const o=M.atual;
+  document.getElementById('obra-ey').textContent=o.id_obra;
+  document.getElementById('obra-h1').textContent=o.nome;
+  document.getElementById('obra-sub').textContent=(o.municipio||o.endereco)+' · '+o.status;
+  const btn=document.getElementById('btn-eap');
+  btn.textContent=M.edicao?'🔓 Configurando EAP':'🔒 Configurar EAP';
+  btn.className='acao-btn'+(M.edicao?' eap-on':'');
+  let html='';
+  o.eap.pacotes.forEach(pac=>{
+    if(!M.edicao&&pac.visivel===false)return;
+    const todos=o._getItens(pac);
+    const c=o.alertasCascata(todos);
+    const cor=o.corPrio(c);
+    const pctP=o.pctPacote(pac);
+    const idP='p-'+pac.codigo;
+    const ab=eapAbertos.has(idP);
+    const isSlot=!!pac.slot;
+    html+=`<div class="pac-bloco">
+      <div class="pac-hdr${ab?' open':''}" onclick="togEAP('${idP}')">
+        <div class="pac-L">
+          ${M.edicao?`<input type="checkbox" class="ec-check" ${pac.visivel!==false?'checked':''} onchange="setPacVis('${pac.codigo}',this.checked)" onclick="event.stopPropagation()">`:``}
+          <span class="pac-cod">${isSlot?'PX':('P'+pac.codigo)}</span>
+          ${M.edicao&&isSlot
+            ?`<input class="ec-input pac-inp" value="${pac.nome}" onchange="ren('${pac.codigo}',this.value,'pacote')" onclick="event.stopPropagation()">`
+            :`<span class="pac-nom">${pac.nome}</span>`}
+        </div>
+        <div class="pac-R">${cBadges(c)}${cor?`<div class="adot ${cor}"></div>`:''}
+          <span class="pac-pct">${pctP}%</span>
+          <span class="chev${ab?' open':''}" id="ch-${idP}">›</span>
+        </div>
+      </div>
+      <div class="pac-body" id="b-${idP}" style="display:${ab?'block':'none'}">`;
+
+    // Grupos reais
+    const grupos=[...(pac.grupos||[])];
+    // Grupos slot
+    const gruposSlot=[...(pac.grupos_slot||[])];
+
+    if(grupos.length||gruposSlot.length){
+      [...grupos,...gruposSlot].forEach(grp=>{
+        const gSlot=!!grp.slot;
+        const gOculto=grp.visivel===false;
+        if(!M.edicao&&gOculto)return;
+        const pctG=Math.round((grp.itens||[]).reduce((s,i)=>s+o.pctItem(i),0)/((grp.itens||[]).length||1));
+        const idG='g-'+grp.codigo;
+        const abG=eapAbertos.has(idG);
+        const cG=o.alertasCascata(grp.itens||[]);
+        const corG=o.corPrio(cG);
+        html+=`<div class="grp-bloco${gOculto?' oculto':''}">
+          <div class="grp-hdr" onclick="togEAP('${idG}')">
+            <div style="flex:1;display:flex;align-items:center;gap:6px;min-width:0">
+              ${M.edicao?`<input type="checkbox" class="ec-check" ${!gOculto?'checked':''} onchange="setGrpVis('${grp.codigo}',this.checked)" onclick="event.stopPropagation()">`:``}
+              <span style="font-family:var(--mono);color:var(--az2);font-size:10px;flex-shrink:0">${grp.codigo}</span>
+              ${M.edicao&&gSlot
+                ?`<input class="ec-input" value="${grp.nome}" onchange="ren('${grp.codigo}',this.value,'grupo')" onclick="event.stopPropagation()" style="flex:1">`
+                :`<span class="grp-nom">${grp.nome}</span>`}
+              ${gSlot&&M.edicao?`<span class="slot-tag">SLOT</span>`:''}
+            </div>
+            <div class="pac-R">${cBadges(cG)}${corG?`<div class="adot ${corG}"></div>`:''}
+              <span class="grp-pct">${pctG}%</span>
+            </div>
+          </div>
+          <div class="grp-body" id="b-${idG}" style="display:${abG?'block':'none'}">`;
+        (grp.itens||[]).forEach(item=>{html+=renderItem(o,item)});
+        html+=`</div></div>`;
+      });
+    } else if(pac.itens){
+      pac.itens.forEach(item=>{html+=renderItem(o,item)});
+    }
+    html+=`</div></div>`;
+  });
+  document.getElementById('eap-cont').innerHTML=html;
+}
+
+function cBadges(c){
+  let h='';
+  if(c.rd>0)h+=`<span class="al-count rd">${c.rd}</span>`;
+  if(c.am>0)h+=`<span class="al-count am">${c.am}</span>`;
+  if(c.azl>0)h+=`<span class="al-count azl">${c.azl}</span>`;
+  if(c.gn>0)h+=`<span class="al-count gn">${c.gn}</span>`;
+  return h;
+}
+
+function renderItem(o,item){
+  const oculto=item.visivel===false;
+  const isSlot=!!item.slot;
+  if(!M.edicao&&oculto)return'';
+  const idI='i-'+item.codigo;
+  const pctI=o.pctItem(item);
+  const cI=o.alertasCascata([item]);
+  const corI=o.corPrio(cI);
+  const abI=eapAbertos.has(idI);
+  let h=`<div class="it-row${oculto?' oculto':''}" onclick="togEAP('${idI}')">
+    <div class="it-L">
+      ${M.edicao?`<input type="checkbox" class="ec-check" ${!oculto?'checked':''} onchange="setItVis('${item.codigo}',this.checked)" onclick="event.stopPropagation()">`:``}
+      <span class="it-cod">${item.codigo}</span>
+      ${M.edicao&&isSlot
+        ?`<input class="ec-input" value="${item.nome}" onchange="ren('${item.codigo}',this.value,'item')" onclick="event.stopPropagation()" style="flex:1">`
+        :`<span class="it-nom">${item.nome}</span>`}
+      ${isSlot&&M.edicao?`<span class="slot-tag">SLOT</span>`:''}
+    </div>
+    <div class="pac-R">${cBadges(cI)}${corI?`<div class="adot ${corI}"></div>`:''}
+      <span class="it-pct">${pctI}%</span>
+      <span class="chev${abI?' open':''}" id="ch-${idI}">›</span>
+    </div>
+  </div>
+  <div id="b-${idI}" style="display:${abI?'block':'none'}">`;
+  (item.subetapas||[]).forEach(sub=>{
+    const sOculta=sub.visivel===false;
+    const sSlot=!!sub.slot;
+    if(!M.edicao&&sOculta)return;
+    const r=o.registros[sub.id];
+    const als=o.alertas[sub.id]||[];
+    const corS=als.length?o.corPrio(als.reduce((c,a)=>{c[a.cor]=(c[a.cor]||0)+1;return c},{rd:0,am:0,azl:0,gn:0})):null;
+    if(M.edicao){
+      h+=`<div class="ec-row${sOculta?' oculto':''}${sSlot&&!sOculta?' slot-on':''}" style="padding-left:${sSlot?'28px':'22px'}" ${!sOculta&&!sSlot?`onclick="abrirReg('${sub.id}')"`:''}> 
+        <input type="checkbox" class="ec-check" ${!sOculta?'checked':''} onchange="setSubVis('${sub.id}',this.checked)" onclick="event.stopPropagation()">
+        ${sSlot
+          ?`<input class="ec-input" value="${sub.nome}" onchange="ren('${sub.id}',this.value,'sub')" onclick="event.stopPropagation()" style="flex:1">`
+          :`<span class="ec-nom${!sOculta?' on':''}">${sub.nome}</span>`}
+        ${sSlot?`<span class="slot-tag">SLOT</span>`:''}
+        ${!sOculta&&!sSlot?`<span class="sub-pct" style="margin-left:auto">${r?r.percentual:0}%</span>`:''}
+        ${!sOculta?als.map(a=>`<div class="adot ${a.cor}"></div>`).join(''):''}
+      </div>`;
+    } else {
+      h+=`<div class="sub-row" onclick="abrirReg('${sub.id}')">
+        <div class="sub-L"><span class="sub-cod">${sub.id}</span><span class="sub-nom">${sub.nome}</span></div>
+        <div class="sub-R">${als.map(a=>`<div class="adot ${a.cor}"></div>`).join('')}
+          <span class="sub-pct">${r?r.percentual:0}%</span></div>
+      </div>`;
+    }
+  });
+  h+=`</div>`;return h;
+}
+
+function togEAP(id){
+  const b=document.getElementById('b-'+id),c=document.getElementById('ch-'+id);
+  if(!b)return;
+  const ab=b.style.display!=='none';
+  if(ab){eapAbertos.delete(id);b.style.display='none';if(c)c.classList.remove('open');
+    b.previousElementSibling?.classList.remove('open');}
+  else{eapAbertos.add(id);b.style.display='block';if(c)c.classList.add('open');
+    if(b.previousElementSibling?.classList.contains('pac-hdr'))b.previousElementSibling.classList.add('open');}
+}
+function toggleEdicao(){M.edicao=!M.edicao;renderEAP()}
+function setPacVis(cod,v){if(!M.atual)return;M.atual.setPacoteVis(cod,v);M.salvar();renderEAP()}
+function setGrpVis(cod,v){if(!M.atual)return;M.atual.setGrupoVis(cod,v);M.salvar();renderEAP()}
+function setItVis(cod,v){if(!M.atual)return;M.atual.setItemVis(cod,v);M.salvar();renderEAP()}
+function setSubVis(id,v){if(!M.atual)return;M.atual.setSubVis(id,v);M.salvar();renderEAP()}
+function ren(cod,nome,tipo){if(nome.trim()&&M.atual){M.atual.renomear(cod,nome.trim(),tipo);M.salvar()}}
+
+// ── DELETAR ──────────────────────────────────────────────────────
+function pedirDeletar(){
+  if(!M.atual)return;
+  document.getElementById('modal-del-p').textContent=`"${M.atual.nome}" será apagada permanentemente.`;
+  document.getElementById('modal-del-ok').onclick=()=>{M.del(M.atual.id_obra);M.atual=null;fecharModais();irPara('home')};
+  document.getElementById('modal-del').classList.add('on');
+}
+function fecharModais(){document.querySelectorAll('.overlay').forEach(o=>o.classList.remove('on'))}
+
+// ── EDITAR OBRA ──────────────────────────────────────────────────
+function abrirEditar(){
+  if(!M.atual)return;const o=M.atual;
+  document.getElementById('e-id').textContent=o.id_obra;
+  document.getElementById('e-nome').value=o.nome;
+  document.getElementById('e-end').value=o.endereco;
+  document.getElementById('e-mun').value=o.municipio||'';
+  document.getElementById('e-ini').value=o.dataInicio||'';
+  document.getElementById('e-ter').value=o.dataTermino||'';
+  document.getElementById('e-sta').value=o.status;
+  if(o.lat&&o.lng){M.gps.e={lat:o.lat,lng:o.lng};document.getElementById('e-loc-info').style.display='block';document.getElementById('e-loc-txt').textContent=`${o.lat}, ${o.lng}`}
+  else document.getElementById('e-loc-info').style.display='none';
+  irPara('editar-obra');
+}
+function salvarEditar(){
+  if(!M.atual)return;
+  const nome=document.getElementById('e-nome').value.trim();
+  const end=document.getElementById('e-end').value.trim();
+  if(!nome||!end){alert('Nome e endereço são obrigatórios');return}
+  const o=M.atual;
+  o.nome=nome;o.endereco=end;o.municipio=document.getElementById('e-mun').value.trim();
+  o.dataInicio=document.getElementById('e-ini').value;o.dataTermino=document.getElementById('e-ter').value;
+  o.status=document.getElementById('e-sta').value;
+  if(M.gps.e.lat){o.lat=M.gps.e.lat;o.lng=M.gps.e.lng}
+  M.salvar();irPara('obra');
+}
+
+// ── CADASTRO ─────────────────────────────────────────────────────
+function criarObra(){
+  const n=document.getElementById('c-nome').value.trim();
+  const e=document.getElementById('c-end').value.trim();
+  if(!n||!e){alert('Nome e endereço são obrigatórios');return}
+  const o=M.criar(n,e,document.getElementById('c-mun').value.trim(),
+    document.getElementById('c-ini').value,document.getElementById('c-ter').value,
+    document.getElementById('c-sta').value,M.gps.c.lat,M.gps.c.lng);
+  ['c-nome','c-end','c-mun','c-ini','c-ter'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('c-sta').value='Em andamento';
+  document.getElementById('c-loc-info').style.display='none';
+  M.gps.c={lat:null,lng:null};
+  M.atual=o;M.edicao=false;irPara('obra');
+}
+
+// ── GPS ──────────────────────────────────────────────────────────
+function captarGPS(ctx){
+  if(!navigator.geolocation){alert('GPS não disponível');return}
+  navigator.geolocation.getCurrentPosition(pos=>{
+    const lat=pos.coords.latitude.toFixed(6),lng=pos.coords.longitude.toFixed(6);
+    M.gps[ctx]={lat,lng};
+    document.getElementById(ctx+'-loc-info').style.display='block';
+    document.getElementById(ctx+'-loc-txt').textContent=`${lat}, ${lng}`;
+    fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`)
+      .then(r=>r.json()).then(d=>{
+        const a=d.address;
+        const rua=((a.road||a.pedestrian||'')+' '+(a.house_number||'')).trim();
+        const mun=((a.city||a.town||a.village||a.county||'')+' / '+(a.state_code||a.state||'')).trim();
+        if(ctx==='c'){if(rua&&!document.getElementById('c-end').value)document.getElementById('c-end').value=rua;if(mun&&!document.getElementById('c-mun').value)document.getElementById('c-mun').value=mun}
+        else{if(rua)document.getElementById('e-end').value=rua;if(mun)document.getElementById('e-mun').value=mun}
+      }).catch(()=>{});
+  },err=>{alert('Erro ao obter localização: '+err.message)});
+}
+function copiarLoc(ctx){
+  const {lat,lng}=M.gps[ctx];if(!lat)return;
+  const link=`https://maps.google.com/?q=${lat},${lng}`;
+  const txt=`${lat}, ${lng}\n${link}`;
+  navigator.clipboard.writeText(txt).then(()=>{
+    const btn=document.getElementById(ctx+'-copy-btn');
+    btn.textContent='✓ Copiado!';setTimeout(()=>btn.textContent='📋 Copiar link',2000);
+  }).catch(()=>prompt('Copie o link:',link));
+}
+
+// ── REGISTRO ─────────────────────────────────────────────────────
+function abrirReg(idSub){
+  if(!M.atual)return;
+  M.subAtual=idSub;const o=M.atual;
+  const sub=o.getSub(idSub);if(!sub)return;
+  document.getElementById('reg-ey').textContent=idSub+' · '+o.id_obra;
+  document.getElementById('reg-h1').textContent=sub.nome;
+  document.getElementById('reg-sub').textContent=o.nome;
+  document.getElementById('reg-erro').style.display='none';
+  const reg=o.registros[idSub];const ultPct=reg?.percentual||0;
+  document.getElementById('slider').value=ultPct;
+  document.getElementById('pct-num').value=ultPct;
+  document.getElementById('pct-val').textContent=ultPct+'%';
+  document.getElementById('ref-pct').textContent='última visita: '+ultPct+'%';
+  document.getElementById('reg-data').value=new Date().toISOString().split('T')[0];
+  document.getElementById('reg-obs').value='';
+  document.getElementById('reg-box').classList.remove('on');
+  motivoSel=null;
+  document.querySelectorAll('.motivo').forEach(m=>m.classList.remove('sel'));
+  document.getElementById('mot-outro').classList.remove('on');
+  document.getElementById('mot-txt').value='';
+  alertasReg=JSON.parse(JSON.stringify(o.alertas[idSub]||[]));
+  renderAlertasReg();
+  irPara('registro');
+}
+function onSlider(v){
+  const n=parseInt(v);
+  document.getElementById('pct-val').textContent=n+'%';
+  document.getElementById('pct-num').value=n;
+  chkReg(n);
+}
+function onNumInput(v){
+  let n=Math.min(100,Math.max(0,parseInt(v)||0));
+  document.getElementById('pct-val').textContent=n+'%';
+  document.getElementById('slider').value=n;
+  document.getElementById('pct-num').value=n;
+  chkReg(n);
+}
+function chkReg(n){
+  const ant=M.atual?.registros[M.subAtual]?.percentual||0;
+  if(n<ant&&n<100)document.getElementById('reg-box').classList.add('on');
+  else{document.getElementById('reg-box').classList.remove('on');motivoSel=null;document.querySelectorAll('.motivo').forEach(m=>m.classList.remove('sel'))}
+}
+function selMot(el,id){
+  document.querySelectorAll('.motivo').forEach(m=>m.classList.remove('sel'));
+  el.classList.add('sel');motivoSel=id;
+  document.getElementById('mot-outro').classList.toggle('on',id==='5');
+  if(id!=='5')document.getElementById('mot-txt').value='';
+}
+function renderAlertasReg(){
+  const cont=document.getElementById('alertas-lista');
+  if(!alertasReg.length){
+    cont.innerHTML=`<div style="font-size:12px;color:var(--tx3);padding:4px 0">Nenhum alerta. Clique em "+ Adicionar" para criar.</div>`;return;
+  }
+  const cores={rd:'Crítico',am:'Atenção',azl:'Material',gn:'Resolvido'};
+  cont.innerHTML=alertasReg.map((al,idx)=>`
+    <div class="alerta-item">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <div class="alerta-cores">
+          ${Object.entries(cores).map(([cor,lbl])=>`
+            <div class="al-opt${al.cor===cor?' on-'+cor:''}" onclick="setCorAl(${idx},'${cor}');event.stopPropagation()">
+              <div class="al-cor" style="background:var(--${cor==='azl'?'azl':cor})"></div>${lbl}
+            </div>`).join('')}
+        </div>
+        <button class="btn-rm-alerta" onclick="rmAl(${idx})">×</button>
+      </div>
+      <textarea class="fta" style="min-height:52px;font-size:12px" 
+        placeholder="Descrição${al.cor==='rd'||al.cor==='am'?' (obrigatória)':' (opcional)'}"
+        oninput="alertasReg[${idx}].obs=this.value">${al.obs||''}</textarea>
+    </div>`).join('');
+}
+function addAlerta(){alertasReg.push({cor:'am',obs:''});renderAlertasReg()}
+function rmAl(idx){alertasReg.splice(idx,1);renderAlertasReg()}
+function setCorAl(idx,cor){alertasReg[idx].cor=cor;renderAlertasReg()}
+function salvarReg(){
+  if(!M.atual||!M.subAtual)return;
+  const o=M.atual;
+  const pct=parseInt(document.getElementById('pct-num').value)||0;
+  const data=document.getElementById('reg-data').value;
+  const obs=document.getElementById('reg-obs').value.trim();
+  const erros=[];
+  if(!data)erros.push('Data obrigatória');
+  const ant=o.registros[M.subAtual]?.percentual||0;
+  const ehReg=pct<ant&&pct<100;
+  if(ehReg&&!motivoSel)erros.push('Regressão requer justificativa');
+  if(motivoSel==='5'&&!document.getElementById('mot-txt').value.trim())erros.push('Descreva o motivo');
+  alertasReg.forEach((al,i)=>{if((al.cor==='rd'||al.cor==='am')&&!al.obs.trim())erros.push(`Alerta ${i+1}: observação obrigatória`)});
+  if(erros.length){const el=document.getElementById('reg-erro');el.innerHTML=erros.map(e=>`<div>❌ ${e}</div>`).join('');el.style.display='block';return}
+  try{
+    const lista=['Erro de registro anterior','Demolição por não conformidade','Retrabalho necessário','Dano ou intempérie',null];
+    const motivo=ehReg?(motivoSel==='5'?document.getElementById('mot-txt').value.trim():lista[parseInt(motivoSel)-1]):null;
+    o.registrar(M.subAtual,pct,data,obs,motivo);
+    o.setAlertas(M.subAtual,alertasReg.map(a=>({...a,em:new Date().toISOString()})));
+    M.salvar();irPara('obra');
+  }catch(err){const el=document.getElementById('reg-erro');el.textContent='❌ '+err.message;el.style.display='block'}
+}
+
+// ── EXPORT ───────────────────────────────────────────────────────
+function renderExport(){
+  const wrap=document.getElementById('exp-lista-wrap');if(!wrap)return;
+  if(!M.obras.length){wrap.innerHTML='<div style="font-size:13px;color:var(--tx3);padding:8px 0">Nenhuma obra cadastrada.</div>';atualizarExpBtns();return}
+  wrap.innerHTML=M.obras.map(o=>`
+    <div class="exp-item">
+      <input type="checkbox" class="exp-chk" ${M.expSel[o.id_obra]?'checked':''} onchange="togExp('${o.id_obra}',this.checked)">
+      <label class="exp-lbl">${o.nome} <span style="color:var(--tx3);font-size:11px">(${o.id_obra})</span></label>
+    </div>`).join('');
+  atualizarExpBtns();
+}
+function togExp(id,v){if(v)M.expSel[id]=true;else delete M.expSel[id];atualizarExpBtns()}
+function atualizarExpBtns(){
+  const t=Object.keys(M.expSel).length>0;
+  ['btn-cron','btn-hist','btn-exp-json','btn-imp-json'].forEach(id=>{const el=document.getElementById(id);if(el)el.disabled=!t});
+}
+function abrirModalExpJSON(){
+  const ids=Object.keys(M.expSel);
+  const o=ids.length>=1?M.get(ids[0]):M.atual;
+  if(!o){alert('Selecione uma obra');return}
+  M._jsonObraId=o.id_obra;
+  document.getElementById('exp-json-nome').value='';
+  document.getElementById('modal-exp-json').classList.add('on');
+}
+function confirmarExpJSON(){
+  const o=M.get(M._jsonObraId)||M.atual;if(!o)return;
+  const nome=document.getElementById('exp-json-nome').value.trim()||'Sem nome';
+  const blob=new Blob([JSON.stringify({...o,exportadoPor:nome,exportadoEm:new Date().toISOString()},null,2)],{type:'application/json'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=o.id_obra+'_'+hj()+'.json';
+  document.body.appendChild(a);a.click();document.body.removeChild(a);
+  o.ultimaExportacao=new Date().toISOString();M.salvar();fecharModais();
+}
+function abrirModalImpJSON(){
+  const ids=Object.keys(M.expSel);if(!ids.length){alert('Selecione uma obra');return}
+  document.getElementById('imp-json-file').value='';
+  document.getElementById('modal-imp-json').classList.add('on');
+}
+function confirmarImpJSON(){
+  const file=document.getElementById('imp-json-file').files[0];
+  if(!file){alert('Selecione um arquivo');return}
+  const reader=new FileReader();
+  reader.onload=e=>{
+    try{
+      const dados=JSON.parse(e.target.result);
+      if(!dados.id_obra){alert('Arquivo inválido');return}
+      const oExist=M.get(dados.id_obra);
+      if(!oExist){alert('Obra não encontrada neste dispositivo.');return}
+      M.merge(oExist,dados);fecharModais();renderEAP();alert('✓ Dados importados com sucesso!');
+    }catch{alert('Erro ao ler o arquivo.')}
+  };
+  reader.readAsText(file);
+}
+function pedirNomeCSV(tipo){
+  M.csvTipo=tipo;document.getElementById('csv-nome').value='';
+  document.getElementById('modal-csv-ok').onclick=()=>confirmarCSV();
+  document.getElementById('modal-csv-nome').classList.add('on');
+}
+function confirmarCSV(){
+  const nome=document.getElementById('csv-nome').value.trim()||'Sem nome';
+  fecharModais();
+  if(M.csvTipo==='cron')expCron(nome);else expHist(nome);
+}
+function expCron(nomeExp){
+  const ids=Object.keys(M.expSel);if(!ids.length)return;
+  const agora=new Date().toISOString();
+  let csv='OBRA,ID_SUBETAPA,NOME_SUBETAPA,PERCENTUAL,DATA,OBSERVACAO,ALERTAS,EXPORTADO_POR\n';
+  ids.forEach(id=>{
+    const o=M.get(id);if(!o)return;
+    const ultExp=o.ultimaExportacao;
+    const enc=its=>its.forEach(i=>{
+      if(i.visivel===false)return;
+      (i.subetapas||[]).filter(s=>s.visivel!==false).forEach(s=>{
+        const r=o.registros[s.id];
+        if(ultExp&&r&&new Date(r.ts)<=new Date(ultExp))return;
+        const als=(o.alertas[s.id]||[]).map(a=>a.cor+':'+a.obs).join('|');
+        csv+=`"${o.nome}","${s.id}","${s.nome}",${r?.percentual||0},"${r?.data||''}","${r?.observacao||''}","${als}","${nomeExp}"\n`;
+      });
+      if(i.itens)enc(i.itens);
+    });
+    o.eap.pacotes.forEach(p=>{if(p.visivel!==false)enc(o._getItens(p))});
+    o.ultimaExportacao=agora;
+  });
+  M.salvar();dlCSV(csv,'Cronograma_'+hj()+'.csv');
+}
+function expHist(nomeExp){
+  const ids=Object.keys(M.expSel);if(!ids.length)return;
+  let csv='OBRA,DATA,ID_SUBETAPA,NOME_SUBETAPA,PCT_ANTERIOR,PCT_NOVO,OBSERVACAO,REGRESSAO,MOTIVO,EXPORTADO_POR\n';
+  ids.forEach(id=>{
+    const o=M.get(id);if(!o)return;
+    o.historico.filter(h=>h.tipo==='reg').forEach(h=>{
+      const s=o.getSub(h.sub);
+      csv+=`"${o.nome}","${h.em}","${h.sub}","${s?.nome||''}",${h.de},${h.para},"${h.obs||''}",${h.reg?'SIM':'NÃO'},"${h.motivo||''}","${nomeExp}"\n`;
+    });
+  });
+  dlCSV(csv,'Historico_'+hj()+'.csv');
+}
+function dlCSV(csv,nome){
+  const b=new Blob([csv],{type:'text/csv;charset=utf-8;'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=nome;
+  document.body.appendChild(a);a.click();document.body.removeChild(a);
+}
+function hj(){return new Date().toISOString().split('T')[0]}
+
+// ── INIT ─────────────────────────────────────────────────────────
+window.addEventListener('load',()=>{
+  renderHome();
+  if(!M.obras.length){
+    const o=M.criar('ESF Vilatur','Av. Principal, 123','Saquarema / RJ','2026-01-15','2026-12-31','Em andamento');
+    o.registrar('0.1.1',100,'2026-06-10','Levantamento topográfico concluído',null);
+    o.registrar('0.1.2',50,'2026-06-15','Primeira bateria de amostras coletada',null);
+    o.registrar('2.1.1.1',100,'2026-06-10','Escavação concluída',null);
+    o.registrar('2.1.2.2',75,'2026-06-18','Armação 75% — falta seção sul',null);
+    o.registrar('2.1.2.3',75,'2026-06-18','Formas prontas exceto seção sul',null);
+    o.registrar('2.1.2.4',25,'2026-06-15','Concretagem parcial — chuva interrompeu',null);
+    o.setAlertas('2.1.2.4',[{cor:'am',obs:'Chuvas atrasaram concretagem das sapatas',em:new Date().toISOString()}]);
+    o.setAlertas('2.2.2.2',[{cor:'rd',obs:'Falta de insumos — pedido em aberto',em:new Date().toISOString()},{cor:'azl',obs:'Cimento aguardando entrega prevista 28/06',em:new Date().toISOString()}]);
+    M.salvar();renderHome();
+  }
+});
+
+</script>
+</body>
+</html>

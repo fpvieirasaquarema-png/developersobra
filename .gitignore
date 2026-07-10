@@ -1,0 +1,7 @@
+# Dados reais do servidor (obras da equipe) — nunca versionar
+server/data/
+
+# Sistema
+Thumbs.db
+Desktop.ini
+*.tmp

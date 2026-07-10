@@ -1,0 +1,23 @@
+# Deploy no Render.com (plano gratuito ou Starter)
+# 1. Suba este repositório no GitHub
+# 2. No Render: New > Blueprint > aponte para o repositório
+# 3. Defina a variável TOKEN (chave da equipe) no painel
+# ATENÇÃO: no plano gratuito o disco é efêmero — os dados do servidor
+# somem a cada redeploy. Como cada celular guarda tudo localmente e o
+# merge reconstrói o estado no próximo sync, isso é tolerável para
+# começar, mas para produção definitiva use o disco persistente abaixo
+# (plano Starter) ou outra hospedagem com disco.
+services:
+  - type: web
+    name: construtrack
+    runtime: node
+    plan: starter
+    buildCommand: ""
+    startCommand: node server/server.js
+    envVars:
+      - key: TOKEN
+        sync: false
+    disk:
+      name: construtrack-dados
+      mountPath: /opt/render/project/src/server/data
+      sizeGB: 1
