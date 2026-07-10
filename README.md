@@ -75,11 +75,12 @@ O app detecta o Supabase pela URL e sincroniza direto com o banco (tabela
 
 ### Logins individuais (Supabase Auth)
 
-Cada pessoa da equipe entra com **usuário + senha** na tela EXPORT → Nuvem
-(ex.: usuário `rafael` — o app completa para `rafael@fpvieira.app` por baixo
-dos panos). A sessão fica salva no aparelho e se renova sozinha; sem login não
-há sincronização. O nome do usuário logado já vem preenchido nas exportações
-(coluna `EXPORTADO_POR`).
+Na tela EXPORT → Nuvem a pessoa **toca no próprio nome e digita só a senha**
+(os botões de nome vêm da tabela `construtrack_equipe` — rodar
+`supabase/equipe.sql` uma vez). A sessão fica salva no aparelho e se renova
+sozinha; sem login não há sincronização. O nome do usuário logado já vem
+preenchido nas exportações (coluna `EXPORTADO_POR`), e o botão **Trocar senha**
+permite que cada um escolha a própria senha.
 
 - Criar usuário: painel do Supabase → *Authentication → Users → Add user* —
   email `nome@fpvieira.app`, senha, marcar *Auto Confirm*; em *User Metadata*

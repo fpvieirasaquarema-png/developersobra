@@ -1125,15 +1125,27 @@ function renderNuvem(){
   if(box){
     const s=sessao();
     if(!cfg.url||!nuvemEhSupabase())box.innerHTML='';
-    else if(s)box.innerHTML=`<div class="info-az" style="margin:0 0 10px;display:flex;justify-content:space-between;align-items:center;gap:8px">
+    else if(s)box.innerHTML=`<div class="info-az" style="margin:0 0 10px;display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap">
         <span>Conectado como <b>${esc(s.nome)}</b></span>
-        <button class="acao-btn" onclick="sairLogin()" style="margin:0;flex-shrink:0">Sair</button></div>`;
-    else box.innerHTML=`
+        <span style="display:flex;gap:6px;flex-shrink:0">
+          <button class="acao-btn" onclick="trocarSenha()" style="margin:0">Trocar senha</button>
+          <button class="acao-btn" onclick="sairLogin()" style="margin:0">Sair</button>
+        </span></div>`;
+    else{
+      const eq=S.get('equipe',[]);
+      const sel=S.get('login_usr','');
+      box.innerHTML=`
       <div class="fc" style="margin-bottom:10px">
-        <div class="fr"><label class="fl">Usuário</label><input id="login-usr" class="fi" placeholder="ex: rafael" autocapitalize="none" autocomplete="username"></div>
-        <div class="fr"><label class="fl">Senha</label><input id="login-pwd" class="fi" type="password" placeholder="senha recebida do responsável" autocomplete="current-password"></div>
+        ${eq.length
+          ?`<div class="fr"><label class="fl">Quem é você?</label>
+             <div class="chips" style="margin:0 0 4px">${eq.map(u=>
+               `<div class="chip${u.usuario===sel?' on':''}" data-usr="${esc(u.usuario)}" onclick="selUsuario('${esc(u.usuario)}')">${esc(u.nome)}</div>`).join('')}</div></div>`
+          :`<div class="fr"><label class="fl">Usuário</label><input id="login-usr" class="fi" placeholder="ex: rafael" autocapitalize="none" autocomplete="username"></div>`}
+        <div class="fr"><label class="fl">Senha</label><input id="login-pwd" class="fi" type="password" placeholder="digite sua senha" autocomplete="current-password"></div>
       </div>
       <button class="btn-prim" onclick="fazerLogin()" style="margin-top:0;margin-bottom:10px">Entrar</button>`;
+      carregarEquipe(); // 1ª vez / nomes novos: busca em segundo plano e re-renderiza
+    }
   }
 }
 function togExp(id,v){if(v)M.expSel[id]=true;else delete M.expSel[id];atualizarExpBtns()}
@@ -1299,15 +1311,55 @@ async function sbToken(){
   return s.access;
 }
 async function fazerLogin(){
-  const u=document.getElementById('login-usr')?.value.trim(),p=document.getElementById('login-pwd')?.value;
-  if(!u||!p){toast('Preencha usuário e senha');return}
+  const digitado=document.getElementById('login-usr')?.value.trim();
+  const u=digitado||S.get('login_usr','');
+  const p=document.getElementById('login-pwd')?.value;
+  if(!u){toast('Toque no seu nome primeiro');return}
+  if(!p){toast('Digite a senha');return}
   try{
     await sbLogin(u,p);
+    S.set('login_usr',u.split('@')[0].toLowerCase());
     toast('✓ Bem-vindo, '+(sessao()?.nome||u)+'!');
     renderNuvem();sincronizarTudo(true);
   }catch(e){toast('⚠ '+e.message)}
 }
 function sairLogin(){localStorage.removeItem('sessao');toast('Sessão encerrada');renderNuvem()}
+function selUsuario(u){
+  S.set('login_usr',u);
+  document.querySelectorAll('#sync-login .chip').forEach(c=>c.classList.toggle('on',c.dataset.usr===u));
+  document.getElementById('login-pwd')?.focus();
+}
+// Busca a lista de nomes da equipe (tabela pública construtrack_equipe) para os botões de login
+let _equipeBuscada=false;
+async function carregarEquipe(){
+  if(_equipeBuscada||!nuvemEhSupabase()||!navigator.onLine)return;
+  _equipeBuscada=true;
+  try{
+    const cfg=cfgNuvem();
+    const r=await fetch(cfg.url+'/rest/v1/construtrack_equipe?select=usuario,nome&order=nome',
+      {headers:{'apikey':cfg.token,'Authorization':'Bearer '+cfg.token}});
+    if(r.ok){
+      const l=await r.json();
+      if(l.length&&JSON.stringify(l)!==JSON.stringify(S.get('equipe',[]))){S.set('equipe',l);renderNuvem()}
+    }
+  }catch{}
+}
+// Troca a própria senha (usuário logado)
+async function trocarSenha(){
+  const nova=prompt('Nova senha (mínimo 6 letras/números):');
+  if(nova==null)return;
+  if(nova.length<6){toast('⚠ Muito curta — mínimo 6 caracteres');return}
+  try{
+    const cfg=cfgNuvem();
+    const tok=await sbToken();
+    const r=await fetch(cfg.url+'/auth/v1/user',{method:'PUT',
+      headers:{'apikey':cfg.token,'Authorization':'Bearer '+tok,'Content-Type':'application/json'},
+      body:JSON.stringify({password:nova})});
+    const d=await r.json().catch(()=>({}));
+    if(!r.ok)throw new Error(d.error_description||d.msg||'não foi possível trocar a senha');
+    toast('✓ Senha alterada!');
+  }catch(e){toast('⚠ '+e.message)}
+}
 
 async function sbReq(caminho,opts={}){
   const cfg=cfgNuvem();
