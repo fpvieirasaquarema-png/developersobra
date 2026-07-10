@@ -64,7 +64,13 @@ Evolução do protótipo aprovado (`prototipo/construtrack_v1_ORIGINAL.html` —
 Blueprint apontando para ele (`render.yaml` já configura tudo), definir a
 variável `TOKEN`. Com o plano Starter o disco é persistente.
 
-**Opção B — PC sempre ligado no escritório:** rodar `INICIAR_SERVIDOR.bat` e
+**Opção B — App no Vercel + servidor no Render:** o `vercel.json` já publica a
+pasta `app/` como site estático (sem build — não usa Vite/framework). O Vercel
+**não** consegue rodar o servidor de sincronização (serverless = sem disco
+persistente), então o backend continua no Render; basta apontar o campo
+"Endereço do servidor" do app para a URL do Render.
+
+**Opção C — PC sempre ligado no escritório:** rodar `INICIAR_SERVIDOR.bat` e
 expor com um túnel (ex.: Cloudflare Tunnel) ou usar só na rede local.
 
 Depois, em cada celular: abrir o endereço, **Adicionar à tela inicial**
