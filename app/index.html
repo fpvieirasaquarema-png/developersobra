@@ -472,6 +472,7 @@ input[type=range]{flex:1;cursor:pointer;accent-color:var(--az)}
       <div class="fr"><label class="fl">Endereço do servidor</label><input id="sync-url" class="fi" placeholder="https://xxxx.supabase.co (ou servidor próprio)" onchange="salvarNuvem()"></div>
       <div class="fr"><label class="fl">Chave da equipe</label><input id="sync-token" class="fi" placeholder="anon key do Supabase (ou token do servidor)" onchange="salvarNuvem()"></div>
     </div>
+    <div id="sync-login"></div>
     <button class="btn-prim" id="btn-sync" onclick="sincronizarTudo(false)" style="margin-top:0">⇅ Sincronizar agora</button>
   </div>
 </div>
@@ -1120,6 +1121,20 @@ function renderNuvem(){
       ?(ult?`Nuvem: ${modo} · última sincronização: `+new Date(ult).toLocaleString('pt-BR'):`Nuvem: ${modo} — nunca sincronizado`)
       :'Sem servidor configurado — o app funciona 100% offline; a sincronização por JSON continua disponível.';
   }
+  const box=document.getElementById('sync-login');
+  if(box){
+    const s=sessao();
+    if(!cfg.url||!nuvemEhSupabase())box.innerHTML='';
+    else if(s)box.innerHTML=`<div class="info-az" style="margin:0 0 10px;display:flex;justify-content:space-between;align-items:center;gap:8px">
+        <span>Conectado como <b>${esc(s.nome)}</b></span>
+        <button class="acao-btn" onclick="sairLogin()" style="margin:0;flex-shrink:0">Sair</button></div>`;
+    else box.innerHTML=`
+      <div class="fc" style="margin-bottom:10px">
+        <div class="fr"><label class="fl">Usuário</label><input id="login-usr" class="fi" placeholder="ex: rafael" autocapitalize="none" autocomplete="username"></div>
+        <div class="fr"><label class="fl">Senha</label><input id="login-pwd" class="fi" type="password" placeholder="senha recebida do responsável" autocomplete="current-password"></div>
+      </div>
+      <button class="btn-prim" onclick="fazerLogin()" style="margin-top:0;margin-bottom:10px">Entrar</button>`;
+  }
 }
 function togExp(id,v){if(v)M.expSel[id]=true;else delete M.expSel[id];atualizarExpBtns()}
 function atualizarExpBtns(){
@@ -1128,7 +1143,7 @@ function atualizarExpBtns(){
 }
 function abrirModalExpJSON(){
   if(!Object.keys(M.expSel).length){alert('Selecione ao menos uma obra');return}
-  document.getElementById('exp-json-nome').value='';
+  document.getElementById('exp-json-nome').value=sessao()?.nome||'';
   document.getElementById('modal-exp-json').classList.add('on');
 }
 function confirmarExpJSON(){
@@ -1172,7 +1187,7 @@ function confirmarImpJSON(){
   reader.readAsText(file);
 }
 function pedirNomeCSV(tipo){
-  M.csvTipo=tipo;document.getElementById('csv-nome').value='';
+  M.csvTipo=tipo;document.getElementById('csv-nome').value=sessao()?.nome||'';
   document.getElementById('modal-csv-ok').onclick=()=>confirmarCSV();
   document.getElementById('modal-csv-nome').classList.add('on');
 }
@@ -1249,11 +1264,57 @@ async function apiNuvem(caminho,opts={}){
 // ── Modo Supabase: o app fala direto com o banco (tabela construtrack_obras) ──
 const SB_TABELA='construtrack_obras';
 function nuvemEhSupabase(){return /\.supabase\./i.test(cfgNuvem().url)}
+
+// ── Login individual (Supabase Auth) ─────────────────────────────
+function sessao(){return S.get('sessao',null)}
+async function sbLogin(usuario,senha){
+  const cfg=cfgNuvem();
+  const email=usuario.includes('@')?usuario.trim().toLowerCase():usuario.trim().toLowerCase()+'@fpvieira.app';
+  const r=await fetch(cfg.url+'/auth/v1/token?grant_type=password',{method:'POST',
+    headers:{'apikey':cfg.token,'Content-Type':'application/json'},
+    body:JSON.stringify({email,password:senha})});
+  const d=await r.json().catch(()=>({}));
+  if(!r.ok)throw new Error(d.error_description||d.msg||'usuário ou senha incorretos');
+  S.set('sessao',{access:d.access_token,refresh:d.refresh_token,
+    expira:Date.now()+(d.expires_in||3600)*1000,
+    email:d.user?.email||email,nome:d.user?.user_metadata?.nome||usuario});
+}
+// Devolve um access token válido, renovando por baixo dos panos quando perto de vencer.
+// Sem internet, devolve o que tem — o app continua offline e sincroniza depois.
+async function sbToken(){
+  let s=sessao();if(!s)return null;
+  if(Date.now()<s.expira-120000)return s.access;
+  try{
+    const cfg=cfgNuvem();
+    const r=await fetch(cfg.url+'/auth/v1/token?grant_type=refresh_token',{method:'POST',
+      headers:{'apikey':cfg.token,'Content-Type':'application/json'},
+      body:JSON.stringify({refresh_token:s.refresh})});
+    if(r.ok){
+      const d=await r.json();
+      s={access:d.access_token,refresh:d.refresh_token,expira:Date.now()+(d.expires_in||3600)*1000,
+        email:d.user?.email||s.email,nome:s.nome};
+      S.set('sessao',s);
+    }
+  }catch{}
+  return s.access;
+}
+async function fazerLogin(){
+  const u=document.getElementById('login-usr')?.value.trim(),p=document.getElementById('login-pwd')?.value;
+  if(!u||!p){toast('Preencha usuário e senha');return}
+  try{
+    await sbLogin(u,p);
+    toast('✓ Bem-vindo, '+(sessao()?.nome||u)+'!');
+    renderNuvem();sincronizarTudo(true);
+  }catch(e){toast('⚠ '+e.message)}
+}
+function sairLogin(){localStorage.removeItem('sessao');toast('Sessão encerrada');renderNuvem()}
+
 async function sbReq(caminho,opts={}){
   const cfg=cfgNuvem();
+  const tok=await sbToken();
   const r=await fetch(cfg.url+'/rest/v1/'+caminho,{...opts,
-    headers:{'apikey':cfg.token,'Authorization':'Bearer '+cfg.token,'Content-Type':'application/json',...(opts.headers||{})}});
-  if(r.status===401||r.status===403)throw new Error('chave (anon key) inválida');
+    headers:{'apikey':cfg.token,'Authorization':'Bearer '+(tok||cfg.token),'Content-Type':'application/json',...(opts.headers||{})}});
+  if(r.status===401||r.status===403)throw new Error(tok?'sessão expirada — entre de novo':'entre com seu usuário para sincronizar');
   if(r.status===404)throw new Error('tabela não encontrada — rode o supabase/setup.sql no projeto');
   if(!r.ok&&r.status!==409)throw new Error('Supabase respondeu '+r.status);
   return r;
@@ -1287,6 +1348,7 @@ async function sincronizarTudo(silencioso){
   const cfg=cfgNuvem();
   if(!cfg.url){if(!silencioso)toast('Configure o endereço do servidor primeiro');return}
   if(!navigator.onLine){if(!silencioso)toast('Sem internet — os dados ficam salvos no aparelho');return}
+  if(nuvemEhSupabase()&&!sessao()){if(!silencioso)toast('Entre com seu usuário para sincronizar');renderNuvem();return}
   const btn=document.getElementById('btn-sync');
   if(btn){btn.disabled=true;btn.textContent='Sincronizando…'}
   try{

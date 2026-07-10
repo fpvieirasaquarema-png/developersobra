@@ -71,8 +71,21 @@ Evolução do protótipo aprovado (`prototipo/construtrack_v1_ORIGINAL.html` —
 
 O app detecta o Supabase pela URL e sincroniza direto com o banco (tabela
 `construtrack_obras`), com trava de versão (`rev`) contra conflito de equipe e
-"lixeira" (`apagada`) para obras deletadas. A anon key funciona como chave da
-equipe — quem tem a chave lê e escreve (endurecer com Supabase Auth é fase futura).
+"lixeira" (`apagada`) para obras deletadas.
+
+### Logins individuais (Supabase Auth)
+
+Cada pessoa da equipe entra com **usuário + senha** na tela EXPORT → Nuvem
+(ex.: usuário `rafael` — o app completa para `rafael@fpvieira.app` por baixo
+dos panos). A sessão fica salva no aparelho e se renova sozinha; sem login não
+há sincronização. O nome do usuário logado já vem preenchido nas exportações
+(coluna `EXPORTADO_POR`).
+
+- Criar usuário: painel do Supabase → *Authentication → Users → Add user* —
+  email `nome@fpvieira.app`, senha, marcar *Auto Confirm*; em *User Metadata*
+  colocar `{"nome":"Fulano"}`.
+- Travar o banco para exigir login: rodar `supabase/logins.sql` (uma vez).
+  Depois disso a anon key sozinha não lê nem escreve dados.
 
 **Opção A2 — Render.com (servidor próprio):** criar Blueprint apontando para o
 repositório (`render.yaml` já configura tudo), definir a variável `TOKEN`. Com
