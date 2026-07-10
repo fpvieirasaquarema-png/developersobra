@@ -469,8 +469,8 @@ input[type=range]{flex:1;cursor:pointer;accent-color:var(--az)}
     <div class="exp-section-title">Nuvem — sincronização automática</div>
     <div class="info-az" style="margin:0 0 10px;font-size:11px" id="sync-info">Sem servidor configurado.</div>
     <div class="fc" style="margin-bottom:10px">
-      <div class="fr"><label class="fl">Endereço do servidor</label><input id="sync-url" class="fi" placeholder="https://seu-servidor.exemplo.com" onchange="salvarNuvem()"></div>
-      <div class="fr"><label class="fl">Chave da equipe (token)</label><input id="sync-token" class="fi" placeholder="cole aqui a chave recebida" onchange="salvarNuvem()"></div>
+      <div class="fr"><label class="fl">Endereço do servidor</label><input id="sync-url" class="fi" placeholder="https://xxxx.supabase.co (ou servidor próprio)" onchange="salvarNuvem()"></div>
+      <div class="fr"><label class="fl">Chave da equipe</label><input id="sync-token" class="fi" placeholder="anon key do Supabase (ou token do servidor)" onchange="salvarNuvem()"></div>
     </div>
     <button class="btn-prim" id="btn-sync" onclick="sincronizarTudo(false)" style="margin-top:0">⇅ Sincronizar agora</button>
   </div>
@@ -913,8 +913,14 @@ function pedirDeletar(){
   document.getElementById('modal-del-ok').onclick=()=>{
     const id=M.atual.id_obra;
     M.del(id);M.atual=null;fecharModais();irPara('home');
-    // Remove também do servidor (vai para a lixeira lá — recuperável); senão a obra voltaria no próximo sync
-    if(naNuvem)apiNuvem('/api/obras/'+id,{method:'DELETE'}).catch(()=>toast('⚠ Não foi possível apagar na nuvem — ela pode voltar no próximo sync'));
+    // Remove também da nuvem (fica na "lixeira" lá — recuperável); senão a obra voltaria no próximo sync
+    if(naNuvem){
+      const aviso=()=>toast('⚠ Não foi possível apagar na nuvem — ela pode voltar no próximo sync');
+      if(nuvemEhSupabase())
+        sbReq(SB_TABELA+'?id_obra=eq.'+encodeURIComponent(id),
+          {method:'PATCH',body:JSON.stringify({apagada:true,atualizado_em:new Date().toISOString()})}).catch(aviso);
+      else apiNuvem('/api/obras/'+id,{method:'DELETE'}).catch(aviso);
+    }
   };
   document.getElementById('modal-del').classList.add('on');
 }
@@ -1109,8 +1115,9 @@ function renderNuvem(){
   const elI=document.getElementById('sync-info');
   if(elI){
     const ult=S.get('nuvem_ultima');
+    const modo=cfg.url?(nuvemEhSupabase()?'Supabase':'servidor próprio'):'';
     elI.textContent=cfg.url
-      ?(ult?'Última sincronização: '+new Date(ult).toLocaleString('pt-BR'):'Servidor configurado — nunca sincronizado')
+      ?(ult?`Nuvem: ${modo} · última sincronização: `+new Date(ult).toLocaleString('pt-BR'):`Nuvem: ${modo} — nunca sincronizado`)
       :'Sem servidor configurado — o app funciona 100% offline; a sincronização por JSON continua disponível.';
   }
 }
@@ -1239,6 +1246,43 @@ async function apiNuvem(caminho,opts={}){
   if(!r.ok)throw new Error('servidor respondeu '+r.status);
   return r.json();
 }
+// ── Modo Supabase: o app fala direto com o banco (tabela construtrack_obras) ──
+const SB_TABELA='construtrack_obras';
+function nuvemEhSupabase(){return /\.supabase\./i.test(cfgNuvem().url)}
+async function sbReq(caminho,opts={}){
+  const cfg=cfgNuvem();
+  const r=await fetch(cfg.url+'/rest/v1/'+caminho,{...opts,
+    headers:{'apikey':cfg.token,'Authorization':'Bearer '+cfg.token,'Content-Type':'application/json',...(opts.headers||{})}});
+  if(r.status===401||r.status===403)throw new Error('chave (anon key) inválida');
+  if(r.status===404)throw new Error('tabela não encontrada — rode o supabase/setup.sql no projeto');
+  if(!r.ok&&r.status!==409)throw new Error('Supabase respondeu '+r.status);
+  return r;
+}
+async function sbObter(id){
+  const r=await sbReq(SB_TABELA+'?id_obra=eq.'+encodeURIComponent(id)+'&select=dados,rev,apagada');
+  const l=await r.json();return l.length?l[0]:null;
+}
+// Envia uma obra com compare-and-swap na coluna rev: se outro celular salvou
+// no meio do caminho, refaz o merge com o estado novo e tenta de novo.
+async function sbSincronizarObra(oLocal){
+  for(let tent=0;tent<4;tent++){
+    const rem=await sbObter(oLocal.id_obra);
+    if(rem&&rem.apagada)return{apagada:true};
+    if(!rem){
+      const r=await sbReq(SB_TABELA,{method:'POST',headers:{Prefer:'return=minimal'},
+        body:JSON.stringify({id_obra:oLocal.id_obra,dados:oLocal,rev:1})});
+      if(r.status===409)continue; // outro aparelho criou agora mesmo — refaz como atualização
+      return{obra:JSON.parse(JSON.stringify(oLocal))};
+    }
+    const merged=mergeObras(rem.dados,JSON.parse(JSON.stringify(oLocal)));
+    const r=await sbReq(SB_TABELA+'?id_obra=eq.'+encodeURIComponent(oLocal.id_obra)+'&rev=eq.'+rem.rev,
+      {method:'PATCH',headers:{Prefer:'return=representation'},
+       body:JSON.stringify({dados:merged,rev:rem.rev+1,atualizado_em:new Date().toISOString()})});
+    const l=await r.json();
+    if(Array.isArray(l)&&l.length)return{obra:merged}; // gravou sem conflito
+  }
+  throw new Error('muita concorrência — tente de novo');
+}
 async function sincronizarTudo(silencioso){
   const cfg=cfgNuvem();
   if(!cfg.url){if(!silencioso)toast('Configure o endereço do servidor primeiro');return}
@@ -1246,19 +1290,36 @@ async function sincronizarTudo(silencioso){
   const btn=document.getElementById('btn-sync');
   if(btn){btn.disabled=true;btn.textContent='Sincronizando…'}
   try{
-    // 1) Envia cada obra local; o servidor devolve o estado mesclado da equipe
-    for(const o of M.obras.slice()){
-      const resp=await apiNuvem('/api/sync',{method:'POST',body:JSON.stringify({obra:o})});
-      const idx=M.obras.findIndex(x=>x.id_obra===o.id_obra);
-      if(resp.obra&&idx>=0)M.obras[idx]=hidratarObra(resp.obra);
-    }
-    // 2) Baixa obras que existem na nuvem mas ainda não neste aparelho
-    const lista=await apiNuvem('/api/obras');
-    let novas=0;
-    for(const resumo of (lista.obras||[])){
-      if(!M.get(resumo.id_obra)){
-        const r=await apiNuvem('/api/obras/'+encodeURIComponent(resumo.id_obra));
-        if(r.obra){M.obras.push(hidratarObra(r.obra));novas++}
+    let novas=0,removidas=0;
+    if(nuvemEhSupabase()){
+      // 1) Envia cada obra local (merge acontece no aparelho, com trava de versão na nuvem)
+      for(const o of M.obras.slice()){
+        const res=await sbSincronizarObra(o);
+        const idx=M.obras.findIndex(x=>x.id_obra===o.id_obra);
+        if(res.apagada){if(idx>=0)M.obras.splice(idx,1);removidas++}
+        else if(res.obra&&idx>=0)M.obras[idx]=hidratarObra(res.obra);
+      }
+      // 2) Baixa obras que existem na nuvem mas ainda não neste aparelho
+      const r=await sbReq(SB_TABELA+'?select=id_obra&apagada=eq.false');
+      for(const item of await r.json()){
+        if(!M.get(item.id_obra)){
+          const rem=await sbObter(item.id_obra);
+          if(rem&&rem.dados&&!rem.apagada){M.obras.push(hidratarObra(rem.dados));novas++}
+        }
+      }
+    }else{
+      // Servidor próprio (server/server.js): o merge acontece lá
+      for(const o of M.obras.slice()){
+        const resp=await apiNuvem('/api/sync',{method:'POST',body:JSON.stringify({obra:o})});
+        const idx=M.obras.findIndex(x=>x.id_obra===o.id_obra);
+        if(resp.obra&&idx>=0)M.obras[idx]=hidratarObra(resp.obra);
+      }
+      const lista=await apiNuvem('/api/obras');
+      for(const resumo of (lista.obras||[])){
+        if(!M.get(resumo.id_obra)){
+          const r=await apiNuvem('/api/obras/'+encodeURIComponent(resumo.id_obra));
+          if(r.obra){M.obras.push(hidratarObra(r.obra));novas++}
+        }
       }
     }
     if(M.atual)M.atual=M.get(M.atual.id_obra)||null;
@@ -1267,7 +1328,7 @@ async function sincronizarTudo(silencioso){
     renderHome();renderNuvem();
     if(document.getElementById('tela-obra').classList.contains('ativa')&&M.atual)renderEAP();
     if(document.getElementById('tela-export').classList.contains('ativa'))renderExport();
-    if(!silencioso)toast(`✓ Sincronizado — ${M.obras.length} obra(s)${novas?`, ${novas} nova(s) recebida(s)`:''}`);
+    if(!silencioso)toast(`✓ Sincronizado — ${M.obras.length} obra(s)${novas?`, ${novas} nova(s)`:''}${removidas?`, ${removidas} removida(s) pela equipe`:''}`);
   }catch(e){
     if(!silencioso)toast('⚠ Falha ao sincronizar: '+e.message);
   }finally{

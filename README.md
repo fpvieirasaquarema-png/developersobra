@@ -60,9 +60,23 @@ Evolução do protótipo aprovado (`prototipo/construtrack_v1_ORIGINAL.html` —
 
 ## Colocar em produção (internet)
 
-**Opção A — Render.com (recomendada):** subir o repositório no GitHub, criar
-Blueprint apontando para ele (`render.yaml` já configura tudo), definir a
-variável `TOKEN`. Com o plano Starter o disco é persistente.
+**Opção A — Vercel + Supabase (arranjo atual):**
+1. **Supabase:** no painel do projeto, abrir *SQL Editor*, colar o conteúdo de
+   `supabase/setup.sql` e executar (uma vez só). Depois, em *Settings → API*,
+   copiar a **Project URL** e a **anon key**.
+2. **Vercel:** importar o repositório GitHub (`vercel.json` já publica a pasta
+   `app/` como estático — sem Vite, sem build). Framework: *Other/None*.
+3. **Em cada celular:** abrir a URL do Vercel, "Adicionar à tela inicial",
+   e na tela EXPORT → Nuvem colar a Project URL do Supabase + a anon key.
+
+O app detecta o Supabase pela URL e sincroniza direto com o banco (tabela
+`construtrack_obras`), com trava de versão (`rev`) contra conflito de equipe e
+"lixeira" (`apagada`) para obras deletadas. A anon key funciona como chave da
+equipe — quem tem a chave lê e escreve (endurecer com Supabase Auth é fase futura).
+
+**Opção A2 — Render.com (servidor próprio):** criar Blueprint apontando para o
+repositório (`render.yaml` já configura tudo), definir a variável `TOKEN`. Com
+o plano Starter o disco é persistente.
 
 **Opção B — App no Vercel + servidor no Render:** o `vercel.json` já publica a
 pasta `app/` como site estático (sem build — não usa Vite/framework). O Vercel
