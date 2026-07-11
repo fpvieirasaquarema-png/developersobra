@@ -1,5 +1,5 @@
 // Construtrack — Service Worker (funcionamento offline em campo)
-const CACHE = 'construtrack-v2.0.0';
+const CACHE = 'construtrack-v2.1.0';
 const SHELL = ['./', './index.html', './manifest.webmanifest', './icons/icon-192.png', './icons/icon-512.png'];
 
 self.addEventListener('install', e => {
@@ -33,7 +33,8 @@ self.addEventListener('fetch', e => {
   e.respondWith(
     caches.match(e.request).then(hit => hit || fetch(e.request).then(r => {
       const cacheavel = r.ok && (url.origin === location.origin ||
-        url.host.includes('fonts.googleapis.com') || url.host.includes('fonts.gstatic.com'));
+        url.host.includes('fonts.googleapis.com') || url.host.includes('fonts.gstatic.com') ||
+        url.host.includes('cdn.sheetjs.com'));
       if (cacheavel) { const cp = r.clone(); caches.open(CACHE).then(c => c.put(e.request, cp)); }
       return r;
     }))

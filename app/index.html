@@ -497,6 +497,10 @@ input[type=range]{flex:1;cursor:pointer;accent-color:var(--az)}
       <div class="exp-card"><div class="exp-icon">📊</div><div class="exp-titulo">Cronograma</div><div class="exp-desc">Estado atual de cada subetapa</div><button class="exp-btn" id="btn-cron" onclick="pedirNomeCSV('cron')">Download CSV</button></div>
       <div class="exp-card"><div class="exp-icon">📋</div><div class="exp-titulo">Histórico</div><div class="exp-desc">Log completo com regressões</div><button class="exp-btn" id="btn-hist" onclick="pedirNomeCSV('hist')">Download CSV</button></div>
     </div>
+    <div class="exp-section-title">Excel — relatório completo</div>
+    <div class="exp-grid">
+      <div class="exp-card"><div class="exp-icon">📗</div><div class="exp-titulo">Excel 6 abas</div><div class="exp-desc">Cronograma · Histórico · Dashboard · Curva S · Regressões · Resumo</div><button class="exp-btn" id="btn-excel" onclick="gerarExcel()">Gerar Excel</button></div>
+    </div>
     <div class="exp-section-title">JSON — sincronização entre celulares</div>
     <div class="info-az" style="margin:0 0 10px;font-size:11px">Exporte de um celular, envie por WhatsApp ou Drive, importe no outro. O merge é automático.</div>
     <div class="exp-grid">
@@ -1204,7 +1208,7 @@ function renderNuvem(){
 function togExp(id,v){if(v)M.expSel[id]=true;else delete M.expSel[id];atualizarExpBtns()}
 function atualizarExpBtns(){
   const t=Object.keys(M.expSel).length>0;
-  ['btn-cron','btn-hist','btn-exp-json','btn-imp-json'].forEach(id=>{const el=document.getElementById(id);if(el)el.disabled=!t});
+  ['btn-cron','btn-hist','btn-exp-json','btn-imp-json','btn-excel'].forEach(id=>{const el=document.getElementById(id);if(el)el.disabled=!t});
 }
 function abrirModalExpJSON(){
   if(!Object.keys(M.expSel).length){alert('Selecione ao menos uma obra');return}
@@ -1307,6 +1311,174 @@ function dlCSV(csv,nome){
   document.body.appendChild(a);a.click();document.body.removeChild(a);
 }
 function hj(){return new Date().toISOString().split('T')[0]}
+
+// ── EXCEL — relatório completo com 6 abas (SheetJS) ──────────────
+const XLSX_CDN='https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js';
+const CORES_ALERTA={rd:'Crítico',am:'Atenção',azl:'Material',gn:'Resolvido'};
+function garantirXLSX(){
+  return new Promise((res,rej)=>{
+    if(window.XLSX)return res();
+    const s=document.createElement('script');
+    s.src=XLSX_CDN;
+    s.onload=()=>res();
+    s.onerror=()=>rej(new Error('precisa de internet na 1ª geração (baixa o gerador)'));
+    document.head.appendChild(s);
+  });
+}
+// Percorre toda subetapa visível da obra
+function cadaSubVisivel(o,cb){
+  const enc=its=>its.forEach(i=>{
+    if(i.visivel===false)return;
+    (i.subetapas||[]).filter(s=>s.visivel!==false).forEach(s=>cb(s));
+    if(i.itens)enc(i.itens);
+  });
+  o.eap.pacotes.forEach(p=>{if(p.visivel!==false)enc(o._getItens(p))});
+}
+// % geral da obra calculado sobre um mapa {idSub: pct} arbitrário (Curva S)
+function pctGeralCom(o,regs){
+  const pctItem=it=>{
+    const vs=(it.subetapas||[]).filter(s=>s.visivel!==false);
+    if(!vs.length)return 0;
+    return vs.reduce((a,s)=>a+(regs[s.id]||0),0)/vs.length;
+  };
+  const ps=o.eap.pacotes.filter(p=>p.visivel!==false);
+  if(!ps.length)return 0;
+  const tot=ps.reduce((a,p)=>{
+    const its=o._getItens(p).filter(i=>i.visivel!==false);
+    if(!its.length)return a;
+    return a+its.reduce((x,i)=>x+pctItem(i),0)/its.length;
+  },0);
+  return Math.round(tot/ps.length);
+}
+function abaCronograma(obras){
+  const aoa=[['OBRA','ID_SUBETAPA','NOME_SUBETAPA','PERCENTUAL','DATA','OBSERVACAO','ALERTAS']];
+  obras.forEach(o=>cadaSubVisivel(o,s=>{
+    const r=o.registros[s.id];
+    const als=(o.alertas[s.id]||[]).map(a=>(CORES_ALERTA[a.cor]||a.cor)+': '+(a.obs||'')).join(' | ');
+    aoa.push([o.nome,s.id,s.nome,r?.percentual||0,r?.data||'',r?.observacao||'',als]);
+  }));
+  return{aoa,cols:[22,12,48,11,12,40,42]};
+}
+function abaHistorico(obras){
+  const aoa=[['OBRA','DATA_HORA','ID_SUBETAPA','NOME_SUBETAPA','DE_%','PARA_%','OBSERVACAO','REGRESSAO','MOTIVO']];
+  obras.forEach(o=>o.historico.filter(h=>h.tipo==='reg').forEach(h=>{
+    const s=o.getSub(h.sub);
+    aoa.push([o.nome,String(h.em||'').replace('T',' ').slice(0,16),h.sub,s?.nome||'',h.de,h.para,h.obs||'',h.reg?'SIM':'NÃO',h.motivo||'']);
+  }));
+  return{aoa,cols:[22,17,12,48,7,8,40,11,28]};
+}
+function abaDashboard(obras){
+  const aoa=[];
+  obras.forEach(o=>{
+    const c=o.contarAlertas();
+    let totalVis=0;cadaSubVisivel(o,()=>totalVis++);
+    const regress=o.historico.filter(h=>h.tipo==='reg'&&h.reg).length;
+    aoa.push(['OBRA',o.nome]);
+    aoa.push(['ID',o.id_obra]);
+    aoa.push(['MUNICÍPIO',o.municipio||o.endereco]);
+    aoa.push(['STATUS',o.status]);
+    aoa.push([]);
+    aoa.push(['KPI','VALOR']);
+    aoa.push(['Avanço geral (%)',o.pctGeral()]);
+    aoa.push(['Subetapas com registro',Object.keys(o.registros).length+' de '+totalVis]);
+    aoa.push(['Alertas ativos',c.rd+c.am+c.azl+c.gn]);
+    aoa.push(['Regressões',regress]);
+    aoa.push([]);
+    aoa.push(['AVANÇO POR PACOTE','%']);
+    o.eap.pacotes.filter(p=>p.visivel!==false).forEach(p=>{
+      aoa.push([(p.slot?'PX':'P'+p.codigo)+' — '+p.nome,o.pctPacote(p)]);
+    });
+    aoa.push([]);
+    aoa.push(['ALERTAS POR COR','QTDE']);
+    aoa.push(['Crítico (vermelho)',c.rd]);
+    aoa.push(['Atenção (âmbar)',c.am]);
+    aoa.push(['Material (azul)',c.azl]);
+    aoa.push(['Resolvido (verde)',c.gn]);
+    aoa.push([]);
+    aoa.push(['ÚLTIMOS REGISTROS','','','']);
+    aoa.push(['SUBETAPA','DE','PARA','DATA']);
+    o.historico.filter(h=>h.tipo==='reg').slice(-5).reverse().forEach(h=>{
+      aoa.push([h.sub,h.de+'%',h.para+'%',h.data||'']);
+    });
+    aoa.push([]);aoa.push([]);
+  });
+  return{aoa,cols:[40,26,10,12]};
+}
+function abaCurvaS(obras){
+  const aoa=[['OBRA','DATA','AVANÇO_GERAL_%']];
+  obras.forEach(o=>{
+    // Reconstrói o avanço da obra data a data, refazendo o filme do histórico
+    const regs=o.historico.filter(h=>h.tipo==='reg').slice()
+      .sort((a,b)=>(a.data||'').localeCompare(b.data||'')||ms(a.em)-ms(b.em));
+    const estado={};const porData={};
+    regs.forEach(h=>{
+      estado[h.sub]=h.para;
+      const d=h.data||String(h.em||'').slice(0,10);
+      porData[d]=pctGeralCom(o,estado);
+    });
+    Object.keys(porData).sort().forEach(d=>aoa.push([o.nome,d,porData[d]]));
+  });
+  return{aoa,cols:[22,12,16]};
+}
+function abaRegressoes(obras){
+  const aoa=[['OBRA','DATA','ID_SUBETAPA','NOME_SUBETAPA','DE_%','PARA_%','MOTIVO','OBSERVACAO']];
+  obras.forEach(o=>o.historico.filter(h=>h.tipo==='reg'&&h.reg).forEach(h=>{
+    const s=o.getSub(h.sub);
+    aoa.push([o.nome,h.data||String(h.em||'').slice(0,10),h.sub,s?.nome||'',h.de,h.para,h.motivo||'',h.obs||'']);
+  }));
+  return{aoa,cols:[22,12,12,48,7,8,28,40]};
+}
+function abaResumo(obras){
+  const totAl=obras.reduce((a,o)=>{const c=o.contarAlertas();return a+c.rd+c.am+c.azl+c.gn},0);
+  const totReg=obras.reduce((a,o)=>a+o.historico.filter(h=>h.tipo==='reg'&&h.reg).length,0);
+  const medio=obras.length?Math.round(obras.reduce((a,o)=>a+o.pctGeral(),0)/obras.length):0;
+  const aoa=[
+    ['RESUMO EXECUTIVO — CONSTRUTRACK'],
+    ['Gerado em',new Date().toLocaleString('pt-BR')],
+    ['Gerado por',sessao()?.nome||'—'],
+    [],
+    ['RESUMO GERAL','VALOR'],
+    ['Total de obras',obras.length],
+    ['Avanço médio (%)',medio],
+    ['Alertas ativos',totAl],
+    ['Regressões registradas',totReg],
+    [],
+    ['ANÁLISE POR OBRA'],
+    ['OBRA','ID','AVANÇO_%','STATUS','ALERTAS','REGRESSÕES']
+  ];
+  obras.forEach(o=>{
+    const c=o.contarAlertas();
+    aoa.push([o.nome,o.id_obra,o.pctGeral(),o.status,c.rd+c.am+c.azl+c.gn,
+      o.historico.filter(h=>h.tipo==='reg'&&h.reg).length]);
+  });
+  aoa.push([]);
+  aoa.push(['RECOMENDAÇÕES']);
+  aoa.push(['• Monitorar alertas críticos (vermelhos) e de material (azuis)']);
+  aoa.push(['• Investigar regressões recorrentes para evitar padrões de retrabalho']);
+  aoa.push(['• Manter o histórico completo para auditoria e medições']);
+  return{aoa,cols:[36,20,11,14,10,12]};
+}
+async function gerarExcel(){
+  const ids=Object.keys(M.expSel);if(!ids.length)return;
+  const btn=document.getElementById('btn-excel');
+  try{
+    if(btn){btn.disabled=true;btn.textContent='Gerando…'}
+    await garantirXLSX();
+    const obras=ids.map(id=>M.get(id)).filter(Boolean);
+    const wb=XLSX.utils.book_new();
+    [['Cronograma',abaCronograma(obras)],['Histórico',abaHistorico(obras)],
+     ['Dashboard',abaDashboard(obras)],['Curva S',abaCurvaS(obras)],
+     ['Regressões',abaRegressoes(obras)],['Resumo Executivo',abaResumo(obras)]
+    ].forEach(([nome,{aoa,cols}])=>{
+      const ws=XLSX.utils.aoa_to_sheet(aoa);
+      if(cols)ws['!cols']=cols.map(w=>({wch:w}));
+      XLSX.utils.book_append_sheet(wb,ws,nome);
+    });
+    XLSX.writeFile(wb,'Construtrack_Relatorio_'+hj()+'.xlsx');
+    toast('✓ Excel gerado — confira em Downloads');
+  }catch(e){toast('⚠ '+e.message)}
+  finally{if(btn){btn.disabled=false;btn.textContent='Gerar Excel'}}
+}
 
 // ── SINCRONIZAÇÃO COM A NUVEM ────────────────────────────────────
 function cfgNuvem(){return S.get('nuvem',NUVEM_PADRAO)}

@@ -1,6 +1,9 @@
 # Dados reais do servidor (obras da equipe) — nunca versionar
 server/data/
 
+# Histórico do desenvolvimento do protótipo — só memória local, não circular
+arquivo-historico/
+
 # Sistema
 Thumbs.db
 Desktop.ini
