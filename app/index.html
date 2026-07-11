@@ -319,6 +319,19 @@ input[type=range]{flex:1;cursor:pointer;accent-color:var(--az)}
     <div class="modal-btns"><button class="mb-cancel" onclick="fecharModais()">Cancelar</button><button class="mb-ok" id="modal-csv-ok">Exportar</button></div>
   </div>
 </div>
+<div class="overlay" id="modal-login">
+  <div class="modal">
+    <div style="font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:.08em;color:var(--az2);margin-bottom:4px">CONSTRUTRACK</div>
+    <h2>Quem é você?</h2>
+    <div class="chips login-chips" id="ov-chips" style="margin:12px 0;flex-wrap:wrap"></div>
+    <label class="fl">Senha</label>
+    <input id="ov-pwd" class="fi" type="password" placeholder="digite sua senha" autocomplete="current-password" onkeydown="if(event.key==='Enter')entrarOverlay()">
+    <div class="modal-btns" style="margin-top:14px">
+      <button class="mb-cancel" onclick="pularLogin()">Entrar depois</button>
+      <button class="mb-ok" onclick="entrarOverlay()">Entrar</button>
+    </div>
+  </div>
+</div>
 
 <div id="tela-home" class="tela ativa">
   <div class="th"><div class="ey">CONTROLE DE OBRAS</div><h1>Acompanhamento Físico</h1><div class="sub">Gestão de avanço por percepção calibrada</div></div>
@@ -486,6 +499,22 @@ const S={
 };
 
 const VERSAO_DADOS=2;
+
+// Configuração da empresa embutida — o app funciona "de fábrica" em qualquer
+// aparelho, sem precisar colar URL/chave. Pode ser sobrescrita em EXPORT → Nuvem.
+// (A anon key é pública por natureza; os dados são protegidos por login + RLS.)
+const NUVEM_PADRAO={
+  url:'https://psbaxzndxdidtlhfwfeq.supabase.co',
+  token:'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBzYmF4em5keGRpZHRsaGZ3ZmVxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM2OTMyNzQsImV4cCI6MjA5OTI2OTI3NH0.mx-nJfEJTtc51WGa37iyO_uWOESgNWU_2PClx0WQLXc'
+};
+// Botões da tela de login. Se a tabela construtrack_equipe existir na nuvem,
+// ela substitui esta lista (permite editar a equipe sem atualizar o app).
+const EQUIPE_PADRAO=[
+  {usuario:'renan',nome:'Renan'},
+  {usuario:'rafael',nome:'Rafael'},
+  {usuario:'lucas',nome:'Lucas'},
+  {usuario:'osnam',nome:'Osnam'}
+];
 
 // Escapa texto para uso seguro dentro de HTML (nomes/observações com <, ", ' etc.)
 function esc(v){return String(v??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;')}
@@ -1132,7 +1161,7 @@ function renderNuvem(){
           <button class="acao-btn" onclick="sairLogin()" style="margin:0">Sair</button>
         </span></div>`;
     else{
-      const eq=S.get('equipe',[]);
+      const eq=S.get('equipe',EQUIPE_PADRAO);
       const sel=S.get('login_usr','');
       box.innerHTML=`
       <div class="fc" style="margin-bottom:10px">
@@ -1256,7 +1285,7 @@ function dlCSV(csv,nome){
 function hj(){return new Date().toISOString().split('T')[0]}
 
 // ── SINCRONIZAÇÃO COM A NUVEM ────────────────────────────────────
-function cfgNuvem(){return S.get('nuvem',{url:'',token:''})}
+function cfgNuvem(){return S.get('nuvem',NUVEM_PADRAO)}
 function salvarNuvem(){
   const url=(document.getElementById('sync-url')?.value||'').trim().replace(/\/+$/,'');
   const token=(document.getElementById('sync-token')?.value||'').trim();
@@ -1323,11 +1352,36 @@ async function fazerLogin(){
     renderNuvem();sincronizarTudo(true);
   }catch(e){toast('⚠ '+e.message)}
 }
-function sairLogin(){localStorage.removeItem('sessao');toast('Sessão encerrada');renderNuvem()}
+function sairLogin(){localStorage.removeItem('sessao');toast('Sessão encerrada');renderNuvem();renderLoginOverlay()}
 function selUsuario(u){
   S.set('login_usr',u);
-  document.querySelectorAll('#sync-login .chip').forEach(c=>c.classList.toggle('on',c.dataset.usr===u));
-  document.getElementById('login-pwd')?.focus();
+  document.querySelectorAll('#sync-login .chip, #ov-chips .chip').forEach(c=>c.classList.toggle('on',c.dataset.usr===u));
+  const ovAberto=document.getElementById('modal-login')?.classList.contains('on');
+  (ovAberto?document.getElementById('ov-pwd'):document.getElementById('login-pwd'))?.focus();
+}
+// ── Tela de login na abertura do app ─────────────────────────────
+function renderLoginOverlay(){
+  if(!nuvemEhSupabase()||sessao())return;
+  const eq=S.get('equipe',EQUIPE_PADRAO);
+  const sel=S.get('login_usr','');
+  document.getElementById('ov-chips').innerHTML=eq.map(u=>
+    `<div class="chip${u.usuario===sel?' on':''}" data-usr="${esc(u.usuario)}" onclick="selUsuario('${esc(u.usuario)}')">${esc(u.nome)}</div>`).join('');
+  document.getElementById('modal-login').classList.add('on');
+  carregarEquipe();
+}
+function pularLogin(){document.getElementById('modal-login').classList.remove('on')}
+async function entrarOverlay(){
+  const u=S.get('login_usr','');
+  const p=document.getElementById('ov-pwd').value;
+  if(!u){toast('Toque no seu nome primeiro');return}
+  if(!p){toast('Digite a senha');return}
+  try{
+    await sbLogin(u,p);
+    document.getElementById('ov-pwd').value='';
+    pularLogin();
+    toast('✓ Bem-vindo, '+(sessao()?.nome||u)+'!');
+    renderNuvem();sincronizarTudo(true);
+  }catch(e){toast('⚠ '+e.message)}
 }
 // Busca a lista de nomes da equipe (tabela pública construtrack_equipe) para os botões de login
 let _equipeBuscada=false;
@@ -1340,7 +1394,10 @@ async function carregarEquipe(){
       {headers:{'apikey':cfg.token,'Authorization':'Bearer '+cfg.token}});
     if(r.ok){
       const l=await r.json();
-      if(l.length&&JSON.stringify(l)!==JSON.stringify(S.get('equipe',[]))){S.set('equipe',l);renderNuvem()}
+      if(l.length&&JSON.stringify(l)!==JSON.stringify(S.get('equipe',[]))){
+        S.set('equipe',l);renderNuvem();
+        if(document.getElementById('modal-login')?.classList.contains('on'))renderLoginOverlay();
+      }
     }
   }catch{}
 }
@@ -1400,7 +1457,7 @@ async function sincronizarTudo(silencioso){
   const cfg=cfgNuvem();
   if(!cfg.url){if(!silencioso)toast('Configure o endereço do servidor primeiro');return}
   if(!navigator.onLine){if(!silencioso)toast('Sem internet — os dados ficam salvos no aparelho');return}
-  if(nuvemEhSupabase()&&!sessao()){if(!silencioso)toast('Entre com seu usuário para sincronizar');renderNuvem();return}
+  if(nuvemEhSupabase()&&!sessao()){if(!silencioso){toast('Entre com seu usuário para sincronizar');renderLoginOverlay()}renderNuvem();return}
   const btn=document.getElementById('btn-sync');
   if(btn){btn.disabled=true;btn.textContent='Sincronizando…'}
   try{
@@ -1462,6 +1519,7 @@ window.addEventListener('load',()=>{
   if('serviceWorker' in navigator&&location.protocol!=='file:'){
     navigator.serviceWorker.register('sw.js').catch(()=>{});
   }
+  renderLoginOverlay(); // tela de login na abertura (some quando já há sessão)
   sincronizarTudo(true); // silencioso — só age se a nuvem estiver configurada
 });
 
