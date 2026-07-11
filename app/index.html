@@ -538,10 +538,10 @@ const NUVEM_PADRAO={
 // Botões da tela de login. Se a tabela construtrack_equipe existir na nuvem,
 // ela substitui esta lista (permite editar a equipe sem atualizar o app).
 const EQUIPE_PADRAO=[
-  {usuario:'renan',nome:'Renan'},
-  {usuario:'rafael',nome:'Rafael'},
   {usuario:'lucas',nome:'Lucas'},
-  {usuario:'osnam',nome:'Osnam'}
+  {usuario:'rafael',nome:'Rafael'},
+  {usuario:'osnam',nome:'Osnam'},
+  {usuario:'renan',nome:'Renan'}
 ];
 
 // Escapa texto para uso seguro dentro de HTML (nomes/observações com <, ", ' etc.)
@@ -1596,7 +1596,7 @@ async function carregarEquipe(){
   _equipeBuscada=true;
   try{
     const cfg=cfgNuvem();
-    const r=await fetch(cfg.url+'/rest/v1/construtrack_equipe?select=usuario,nome&order=nome',
+    const r=await fetch(cfg.url+'/rest/v1/construtrack_equipe?select=usuario,nome&order=ordem',
       {headers:{'apikey':cfg.token,'Authorization':'Bearer '+cfg.token}});
     if(r.ok){
       const l=await r.json();
