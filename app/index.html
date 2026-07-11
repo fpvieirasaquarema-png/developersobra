@@ -929,11 +929,11 @@ function togEAP(id){
     if(b.previousElementSibling?.classList.contains('pac-hdr'))b.previousElementSibling.classList.add('open');}
 }
 function toggleEdicao(){M.edicao=!M.edicao;renderEAP()}
-function setPacVis(cod,v){if(!M.atual)return;M.atual.setPacoteVis(cod,v);M.salvar();renderEAP()}
-function setGrpVis(cod,v){if(!M.atual)return;M.atual.setGrupoVis(cod,v);M.salvar();renderEAP()}
-function setItVis(cod,v){if(!M.atual)return;M.atual.setItemVis(cod,v);M.salvar();renderEAP()}
-function setSubVis(id,v){if(!M.atual)return;M.atual.setSubVis(id,v);M.salvar();renderEAP()}
-function ren(cod,nome,tipo){if(nome.trim()&&M.atual){M.atual.renomear(cod,nome.trim(),tipo);M.salvar()}}
+function setPacVis(cod,v){if(!M.atual)return;M.atual.setPacoteVis(cod,v);M.salvar();agendarSync(8000);renderEAP()}
+function setGrpVis(cod,v){if(!M.atual)return;M.atual.setGrupoVis(cod,v);M.salvar();agendarSync(8000);renderEAP()}
+function setItVis(cod,v){if(!M.atual)return;M.atual.setItemVis(cod,v);M.salvar();agendarSync(8000);renderEAP()}
+function setSubVis(id,v){if(!M.atual)return;M.atual.setSubVis(id,v);M.salvar();agendarSync(8000);renderEAP()}
+function ren(cod,nome,tipo){if(nome.trim()&&M.atual){M.atual.renomear(cod,nome.trim(),tipo);M.salvar();agendarSync(8000)}}
 
 // ── DELETAR ──────────────────────────────────────────────────────
 function pedirDeletar(){
@@ -981,7 +981,7 @@ function salvarEditar(){
   o.status=document.getElementById('e-sta').value;
   if(M.gps.e.lat){o.lat=Number(M.gps.e.lat);o.lng=Number(M.gps.e.lng)}
   o._tocarMeta();
-  M.salvar();irPara('obra');
+  M.salvar();agendarSync();irPara('obra');
 }
 
 // ── CADASTRO ─────────────────────────────────────────────────────
@@ -996,7 +996,7 @@ function criarObra(){
   document.getElementById('c-sta').value='Em andamento';
   document.getElementById('c-loc-info').style.display='none';
   M.gps.c={lat:null,lng:null};
-  M.atual=o;M.edicao=false;irPara('obra');
+  M.atual=o;M.edicao=false;agendarSync();irPara('obra');
 }
 
 // ── GPS ──────────────────────────────────────────────────────────
@@ -1121,7 +1121,7 @@ function salvarReg(){
     o.registrar(M.subAtual,pct,data,obs,motivo);
     // Preserva o "em" original de alertas existentes; só alertas novos ganham timestamp agora
     o.setAlertas(M.subAtual,alertasReg.map(a=>({...a,em:a.em||new Date().toISOString()})));
-    M.salvar();irPara('obra');
+    M.salvar();agendarSync();irPara('obra');
   }catch(err){const el=document.getElementById('reg-erro');el.textContent='❌ '+err.message;el.style.display='block'}
 }
 
@@ -1453,11 +1453,20 @@ async function sbSincronizarObra(oLocal){
   }
   throw new Error('muita concorrência — tente de novo');
 }
+// Sincronização automática: alguns segundos após salvar algo, quando o app
+// volta para a tela e quando a internet volta. Debounce evita rajadas.
+let _syncTimer=null,_syncRodando=false;
+function agendarSync(ms){
+  clearTimeout(_syncTimer);
+  _syncTimer=setTimeout(()=>sincronizarTudo(true),ms||4000);
+}
 async function sincronizarTudo(silencioso){
   const cfg=cfgNuvem();
   if(!cfg.url){if(!silencioso)toast('Configure o endereço do servidor primeiro');return}
   if(!navigator.onLine){if(!silencioso)toast('Sem internet — os dados ficam salvos no aparelho');return}
   if(nuvemEhSupabase()&&!sessao()){if(!silencioso){toast('Entre com seu usuário para sincronizar');renderLoginOverlay()}renderNuvem();return}
+  if(_syncRodando){agendarSync(6000);return}
+  _syncRodando=true;
   const btn=document.getElementById('btn-sync');
   if(btn){btn.disabled=true;btn.textContent='Sincronizando…'}
   try{
@@ -1503,6 +1512,7 @@ async function sincronizarTudo(silencioso){
   }catch(e){
     if(!silencioso)toast('⚠ Falha ao sincronizar: '+e.message);
   }finally{
+    _syncRodando=false;
     if(btn){btn.disabled=false;btn.textContent='⇅ Sincronizar agora'}
   }
 }
@@ -1521,6 +1531,10 @@ window.addEventListener('load',()=>{
   }
   renderLoginOverlay(); // tela de login na abertura (some quando já há sessão)
   sincronizarTudo(true); // silencioso — só age se a nuvem estiver configurada
+  // Sincroniza também quando o app volta para a tela (PWA reaberto sem recarregar)
+  document.addEventListener('visibilitychange',()=>{if(!document.hidden)agendarSync(1500)});
+  // ...e quando a internet volta no canteiro
+  window.addEventListener('online',()=>agendarSync(2000));
 });
 
 </script>
